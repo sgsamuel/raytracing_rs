@@ -1,4 +1,4 @@
-use super::vec3::Vec3 as Color;
+type Color = super::vec3::Vec3;
 
 pub fn write_color(pixel_color: Color) {
     let r = pixel_color.x;

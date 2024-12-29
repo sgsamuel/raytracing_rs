@@ -6,7 +6,8 @@ mod vec3;
 mod color;
 
 use color::write_color;
-use vec3::Vec3 as Color;
+type Color = vec3::Vec3;
+type Point3 = vec3::Vec3;
 
 #[derive(Debug)]
 pub struct Config {
