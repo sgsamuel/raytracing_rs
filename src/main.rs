@@ -2,12 +2,9 @@ use dotenv::dotenv;
 use env_logger;
 use log::info;
 
-mod vec3;
-mod color;
-
-use color::write_color;
-type Color = vec3::Vec3;
-type Point3 = vec3::Vec3;
+pub mod color;
+pub mod vec3;
+pub mod ray;
 
 #[derive(Debug)]
 pub struct Config {
@@ -38,8 +35,12 @@ fn main() {
         for i in 0..image_width {
             info!("Scanlines remaining: {}", image_height - j);
             
-            let pixel_color = Color { x: (i as f64)/((image_width - 1) as f64), y: (j as f64)/((image_height-1) as f64), z: 0.0 };
-            write_color(pixel_color);
+            let pixel_color = color::Color { 
+                x: (i as f64)/((image_width - 1) as f64), 
+                y: (j as f64)/((image_height-1) as f64), 
+                z: 0.0 
+            };
+            color::write_color(pixel_color);
         }
     }
     

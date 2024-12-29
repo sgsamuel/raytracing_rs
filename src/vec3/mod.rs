@@ -14,6 +14,8 @@ pub struct Vec3 {
     pub z: f64,
 }
 
+pub type Point3 = Vec3;
+
 impl Vec3 {
     pub const ZERO: Vec3 = Vec3 {
         x: 0.0,
