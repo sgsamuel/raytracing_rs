@@ -49,8 +49,8 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    pub fn unit_vector(self) -> Vec3 {
-        self / self.length()
+    pub fn unit_vector(v: &Vec3) -> Vec3 {
+        v / v.length()
     }
 
     pub fn dot(v1: &Vec3, v2: &Vec3) -> f64 {
@@ -266,8 +266,8 @@ mod tests {
     fn unit_vector() {
         let v = Vec3::new(3.0, 2.0, 1.0);
         let len = v.length();
-        assert!((v.unit_vector().length() - 1.0).abs() < 0.01);
-        assert_eq!(v.unit_vector(), v / len);
+        assert!((Vec3::unit_vector(&v).length() - 1.0).abs() < 0.01);
+        assert_eq!(Vec3::unit_vector(&v), v / len);
     }
 
     #[test]
