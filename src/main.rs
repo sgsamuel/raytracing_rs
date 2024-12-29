@@ -45,7 +45,7 @@ pub fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> f64 {
 pub fn ray_color(ray: &Ray) -> Color {
     let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray);
     if t > 0.0 {
-        let normal: Vec3 = vec3::Vec3::unit_vector(&(ray.at(t) - Vec3::new(0.0, 0.0, 1.0)));
+        let normal: Vec3 = vec3::Vec3::unit_vector(&(ray.at(t) - Vec3::new(0.0, 0.0, -1.0)));
         return 0.5*Color::new(normal.component(Axis::X) + 1.0, normal.component(Axis::Y) + 1.0, normal.component(Axis::Z) + 1.0);
     }
     
