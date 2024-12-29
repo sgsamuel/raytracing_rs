@@ -7,14 +7,12 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub fn new() -> Ray {
-        Ray {
-            origin: Point3::new(0.0, 0.0, 0.0),
-            direction: Vec3::new(0.0, 0.0, 0.0),
-        }
-    }
+    pub const ZERO: Ray = Ray {
+        origin: Point3::ZERO,
+        direction: Vec3::ZERO,
+    };
 
-    pub fn with_origin_and_direction(origin: Point3, direction: Vec3) -> Ray {
+    pub fn new(origin: Point3, direction: Vec3) -> Ray {
         Ray { origin, direction }
     }
 
@@ -22,12 +20,10 @@ impl Ray {
         &self.origin
     }
 
-    // Getter for direction
     pub fn direction(&self) -> &Vec3 {
         &self.direction
     }
 
-    // Method to calculate the point at parameter t
     pub fn at(&self, t: f64) -> Point3 {
         self.origin + self.direction * t
     }

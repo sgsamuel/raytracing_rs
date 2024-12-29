@@ -1,10 +1,16 @@
+use std::cmp::max;
 use dotenv::dotenv;
 use env_logger;
 use log::info;
 
 pub mod color;
-pub mod vec3;
 pub mod ray;
+pub mod vec3;
+
+use color::Color;
+use ray::Ray;
+use vec3::{Axis, Point3, Vec3};
+
 
 #[derive(Debug)]
 pub struct Config {
@@ -20,26 +26,78 @@ impl Config {
     }
 }
 
-fn main() {
-  dotenv().ok();
-  env_logger::init();
 
-  let image_width: u32 = 256;
-  let image_height: u32 = 256;
-  
-  println!("P3");
-  println!("{} {}", image_width, image_height);
-  println!("255");
+pub fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> bool {
+    let oc: Vec3 = center - ray.origin();
+
+    let a: f64 = vec3::Vec3::dot(ray.direction(), ray.direction());
+    let b: f64 = -2.0 * vec3::Vec3::dot(ray.direction(), &oc);
+    let c: f64 = vec3::Vec3::dot(&oc, &oc) - radius*radius;
+
+    let discriminant: f64 = b*b - 4.0*a*c;
+    return discriminant >= 0.0;
+}
+
+pub fn ray_color(ray: &Ray) -> Color {
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+    
+    let unit_direction: Vec3 = ray.direction().unit_vector();
+    let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
+    return (1.0 - a)*Color::new(1.0, 1.0, 1.0) + a*Color::new(0.5, 0.7, 1.0);
+}
+
+fn main() {
+    dotenv().ok();
+    env_logger::init();
+
+
+    // Image
+
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let image_width: u32 = 400;
+
+    // Calculate the image height, and ensure that it's at least 1.
+    let image_height: u32 = max((image_width as f64 / aspect_ratio) as u32, 1);
+    
+    
+    // Camera
+
+    let focal_length: f64 = 1.0;
+    let viewport_height: f64 = 2.0;
+    let viewport_width: f64 = viewport_height * (image_width as f64 / image_height as f64);
+    let camera_center: Vec3 = Point3::new(0.0, 0.0, 0.0);
+
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    let viewport_u: Vec3 = Vec3::new(viewport_width, 0.0, 0.0);
+    let viewport_v: Vec3 = Vec3::new(0.0, -viewport_height, 0.0);
+
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    let pixel_delta_u: Vec3 = viewport_u / image_width as f64;
+    let pixel_delta_v: Vec3 = viewport_v / image_height as f64;
+
+    // Calculate the location of the upper left pixel.
+    let viewport_upper_left: Vec3 = camera_center
+                                - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    let pixel00_loc: Vec3 = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+
+    // Render
+
+    println!("P3");
+    println!("{} {}", image_width, image_height);
+    println!("255");
 
     for j in 0..image_height {
         for i in 0..image_width {
             info!("Scanlines remaining: {}", image_height - j);
             
-            let pixel_color = color::Color { 
-                x: (i as f64)/((image_width - 1) as f64), 
-                y: (j as f64)/((image_height-1) as f64), 
-                z: 0.0 
-            };
+            let pixel_center: Vec3 = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
+            let ray_direction: Vec3 = pixel_center - camera_center;
+            let camera_ray: Ray = Ray::new(camera_center, ray_direction);
+
+            let pixel_color = ray_color(&camera_ray);
             color::write_color(pixel_color);
         }
     }
