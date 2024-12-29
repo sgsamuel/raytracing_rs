@@ -1,6 +1,8 @@
 use dotenv::dotenv;
-use log::info;
 use env_logger;
+use log::info;
+
+mod vec3;
 
 #[derive(Debug)]
 pub struct Config {
