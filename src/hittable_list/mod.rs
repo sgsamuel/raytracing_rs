@@ -1,6 +1,9 @@
 use std::rc::Rc;
+
+use super::color::Color;
 use super::hittable::{HitRecord, Hittable};
 use super::interval::Interval;
+use super::material::Lambertian;
 use super::ray::Ray;
 use super::vec3::{Point3, Vec3};
 
@@ -37,6 +40,7 @@ impl Hittable for HittableList {
         let mut temp_rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
+            mat: Rc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };

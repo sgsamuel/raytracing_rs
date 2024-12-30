@@ -68,6 +68,12 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
+    pub fn near_zero(&self) -> bool {
+        // Return true if the vector is close to zero in all dimensions.
+        let eps: f64 = 1e-8;
+        return (self.x.abs() < eps) && (self.y.abs() < eps) && (self.z.abs() < eps);
+    }
+
     #[inline(always)]
     pub fn unit_vector(v: &Vec3) -> Vec3 {
         v / v.length()
@@ -91,6 +97,11 @@ impl Vec3 {
             return on_unit_sphere;
         }
         -on_unit_sphere
+    }
+
+    #[inline(always)]
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        v - 2.0 * Vec3::dot(v, n) * n
     }
 
     #[inline(always)]
@@ -295,7 +306,7 @@ mod tests {
 
     #[test]
     fn component() {
-        let v = Vec3::new(3.0, 2.0, 1.0);
+        let v: Vec3 = Vec3::new(3.0, 2.0, 1.0);
         assert_eq!(v.component(Axis::X), v.x);
         assert_eq!(v.component(Axis::Y), v.y);
         assert_eq!(v.component(Axis::Z), v.z);
@@ -303,46 +314,65 @@ mod tests {
 
     #[test]
     fn length() {
-        let v1 = Vec3::new(3.0, 2.0, 1.0);
+        let v1: Vec3 = Vec3::new(3.0, 2.0, 1.0);
         assert_eq!(v1.length(), ((3.0 * 3.0 + 2.0 * 2.0 + 1.0 * 1.0) as f64).sqrt());
 
-        let v2 = Vec3::ZERO;
+        let v2: Vec3 = Vec3::ZERO;
         assert_eq!(v2.length(), 0.0);
     }
 
     #[test]
+    fn near_zero() {
+        let v1: Vec3 = Vec3::new(3.0, 2.0, 1.0);
+        assert_eq!(v1.near_zero(), false);
+
+        let v2: Vec3 = Vec3::ZERO;
+        assert_eq!(v2.near_zero(), true);
+
+        let v3: Vec3 = Vec3::new(0.0, 1.0, 0.0);
+        assert_eq!(v2.near_zero(), false);
+    }
+
+    #[test]
+    fn reflect() {
+        let v1: Vec3 = Vec3::new(3.0, 2.0, 1.0);
+        let v2: Vec3 = Vec3::ONE;
+        assert_eq!(Vec3::reflect(&v1, &v2), Vec3::new(3.0, 2.0, 1.0));
+    }
+
+    #[test]
     fn unit_vector() {
-        let v = Vec3::new(3.0, 2.0, 1.0);
-        let len = v.length();
+        let v: Vec3 = Vec3::new(3.0, 2.0, 1.0);
+        let len: f64 = v.length();
         assert!((Vec3::unit_vector(&v).length() - 1.0).abs() < 0.01);
         assert_eq!(Vec3::unit_vector(&v), v / len);
     }
 
     #[test]
     fn dot() {
-        let v1 = Vec3::new(2.0, 3.0, 5.0);
-        let v2 = Vec3::new(7.0, 11.0, 13.0);
+        let v1: Vec3 = Vec3::new(2.0, 3.0, 5.0);
+        let v2: Vec3 = Vec3::new(7.0, 11.0, 13.0);
         assert_eq!(Vec3::dot(&v1, &v2), 2.0 * 7.0 + 3.0 * 11.0 + 5.0 * 13.0);
     }
 
     #[test]
     fn cross() {
-        let v1 = Vec3::new(1.0, 0.0, 0.0);
-        let v2 = Vec3::new(0.0, 1.0, 0.0);
+        let v1: Vec3 = Vec3::new(1.0, 0.0, 0.0);
+        let v2: Vec3 = Vec3::new(0.0, 1.0, 0.0);
         assert_eq!(Vec3::cross(&v1, &v2), Vec3::new(0.0, 0.0, 1.0));
     }
 
     #[test]
     fn neg() {
-        let v = Vec3::new(0.0, 1.0, 2.0);
+        let v: Vec3 = Vec3::new(0.0, 1.0, 2.0);
         assert_eq!(-&v, Vec3::new(0.0, -1.0, -2.0));
         assert_eq!(-v, Vec3::new(0.0, -1.0, -2.0));
     }
 
     #[test]
     fn add() {
-        let v1 = Vec3::new(0.0, 1.0, 2.0);
-        let v2 = Vec3::new(3.0, 4.0, 5.0);
+        let v1: Vec3 = Vec3::new(0.0, 1.0, 2.0);
+        let v2: Vec3 = Vec3::new(3.0, 4.0, 5.0);
         assert_eq!(&v1 + &v2, Vec3::new(3.0, 5.0, 7.0));
         assert_eq!(v1 + &v2, Vec3::new(3.0, 5.0, 7.0));
         assert_eq!(&v1 + v2, Vec3::new(3.0, 5.0, 7.0));
@@ -351,16 +381,16 @@ mod tests {
 
     #[test]
     fn add_assign() {
-        let v1 = Vec3::new(0.0, 1.0, 2.0);
+        let v1: Vec3 = Vec3::new(0.0, 1.0, 2.0);
 
         {
-            let mut v2 = Vec3::ONE;
+            let mut v2: Vec3 = Vec3::ONE;
             v2 += v1;
             assert_eq!(v2, Vec3::new(1.0, 2.0, 3.0));
         }
 
         {
-            let mut v2 = Vec3::ONE;
+            let mut v2: Vec3 = Vec3::ONE;
             v2 += &v1;
             assert_eq!(v2, Vec3::new(1.0, 2.0, 3.0));
         }
@@ -368,8 +398,8 @@ mod tests {
 
     #[test]
     fn sub() {
-        let v1 = Vec3::new(0.0, 1.0, 2.0);
-        let v2 = Vec3::new(3.0, 4.0, 5.0);
+        let v1: Vec3 = Vec3::new(0.0, 1.0, 2.0);
+        let v2: Vec3 = Vec3::new(3.0, 4.0, 5.0);
         assert_eq!(&v1 - &v2, Vec3::new(-3.0, -3.0, -3.0));
         assert_eq!(v1 - &v2, Vec3::new(-3.0, -3.0, -3.0));
         assert_eq!(&v1 - v2, Vec3::new(-3.0, -3.0, -3.0));
@@ -378,16 +408,16 @@ mod tests {
     
     #[test]
     fn sub_assign() {
-        let v1 = Vec3::new(0.0, 1.0, 2.0);
+        let v1: Vec3 = Vec3::new(0.0, 1.0, 2.0);
 
         {
-            let mut v2 = Vec3::ONE;
+            let mut v2: Vec3 = Vec3::ONE;
             v2 -= v1;
             assert_eq!(v2, Vec3::new(1.0, 0.0, -1.0));
         }
 
         {
-            let mut v2 = Vec3::ONE;
+            let mut v2: Vec3 = Vec3::ONE;
             v2 -= &v1;
             assert_eq!(v2, Vec3::new(1.0, 0.0, -1.0));
         }
@@ -395,9 +425,9 @@ mod tests {
 
     #[test]
     fn mul() {
-        let v1 = Vec3::new(0.0, 1.0, 2.0);
-        let v2 = Vec3::new(3.0, 4.0, 5.0);
-        let c = 3.5;
+        let v1: Vec3 = Vec3::new(0.0, 1.0, 2.0);
+        let v2: Vec3= Vec3::new(3.0, 4.0, 5.0);
+        let c: f64 = 3.5;
         assert_eq!(&v1 * &v2, Vec3::new(0.0, 4.0, 10.0));
         assert_eq!(v1 * &v2, Vec3::new(0.0, 4.0, 10.0));
         assert_eq!(&v1 * v2, Vec3::new(0.0, 4.0, 10.0));
@@ -410,16 +440,16 @@ mod tests {
 
     #[test]
     fn mul_assign() {
-        let mut v = Vec3::ONE;
-        let c = 2.0;
+        let mut v: Vec3 = Vec3::ONE;
+        let c: f64 = 2.0;
         v *= c;
         assert_eq!(v, Vec3::new(2.0, 2.0, 2.0));
     }
 
     #[test]
     fn div() {
-        let v = Vec3::new(0.0, 1.0, 2.0);
-        let c = 2.0;
+        let v: Vec3 = Vec3::new(0.0, 1.0, 2.0);
+        let c: f64 = 2.0;
         assert_eq!(&v / c, Vec3::new(0.0, 0.5, 1.0));
         assert_eq!(v / c, Vec3::new(0.0, 0.5, 1.0));
         assert_eq!(c / &v, Vec3::new(0.0, 0.5, 1.0));
@@ -428,8 +458,8 @@ mod tests {
 
     #[test]
     fn div_assign() {
-        let mut v = Vec3::ONE;
-        let c = 2.0;
+        let mut v: Vec3 = Vec3::ONE;
+        let c: f64 = 2.0;
         v /= c;
         assert_eq!(v, Vec3::new(0.5, 0.5, 0.5));
     }

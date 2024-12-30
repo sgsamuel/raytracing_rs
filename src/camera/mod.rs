@@ -1,9 +1,11 @@
 use std::cmp::max;
+use std::rc::Rc;
 use log::info;
 
 use super::color::{Color, write_color};
 use super::hittable::{Hittable, HitRecord};
 use super::interval::Interval;
+use super::material::Lambertian;
 use super::vec3::{Axis, Point3, Vec3};
 use super::ray::Ray;
 
@@ -97,6 +99,7 @@ impl Camera {
         let mut rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
+            mat:  Rc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };
@@ -106,8 +109,13 @@ impl Camera {
         }
 
         if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec) {
-            let direction = rec.normal + Vec3::random_unit_vector();
-            return 0.1 * self.ray_color(&Ray::new(rec.p, direction), depth-1, world);
+            let mut attenuation: Color = Color::ZERO;
+            let mut scattered: Ray = Ray::ZERO;
+            if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * self.ray_color(ray, depth-1, world)
+            }
+
+            return Color::ZERO;
         }
         
         let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());
