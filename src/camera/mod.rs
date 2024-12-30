@@ -8,9 +8,10 @@ use super::vec3::{Axis, Point3, Vec3};
 use super::ray::Ray;
 
 pub struct Camera {
-    pub aspect_ratio: f64,
-    pub image_width: u32,
-    pub samples_per_pixel: u32,
+    pub aspect_ratio: f64,      // Ratio of image width over height
+    pub image_width: u32,       // Rendered image width in pixel count
+    pub samples_per_pixel: u32, // Count of random samples for each pixel
+    pub max_depth: u32,              // Maximum number of ray bounces into scene
 
     image_height: u32,
     pixel_samples_scale: f64,
@@ -21,10 +22,10 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Camera {
+    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32, max_depth: u32) -> Camera {
         let image_height: u32 = max((image_width as f64 / aspect_ratio) as u32, 1);
         let pixel_samples_scale: f64 = 1.0 / (samples_per_pixel as f64);
-        let center: Point3 = Point3::new(0.0, 0.0, 0.0);
+        let center: Point3 = Point3::ZERO;
 
         // Determine viewport dimensions.
         let focal_length: f64 = 1.0;
@@ -48,6 +49,7 @@ impl Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
             image_height, 
             pixel_samples_scale,
             center,
@@ -65,10 +67,10 @@ impl Camera {
         for j in 0..self.image_height {
             info!("Scanlines remaining: {}", self.image_height - j);
             for i in 0..self.image_width {
-                let mut pixel_color: Color = Color::new(0.0, 0.0, 0.0);
+                let mut pixel_color: Color = Color::ZERO;
                 for _ in 0..self.samples_per_pixel {
                     let ray: Ray = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&ray, world);
+                    pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
 
                 write_color(self.pixel_samples_scale * pixel_color);
@@ -91,22 +93,26 @@ impl Camera {
         return Ray::new(ray_origin, ray_direction);
     }
 
-    fn ray_color(&self, ray: &Ray, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &dyn Hittable) -> Color {
         let mut rec: HitRecord = HitRecord {
-            p: Point3::new(0.0, 0.0, 0.0),
-            normal: Vec3::new(0.0, 0.0, 0.0),
+            p: Point3::ZERO,
+            normal: Vec3::ZERO,
             t: 0.0,
             front_face: false
         };
-    
-        if world.hit(ray, Interval::new(0.0, f64::INFINITY), &mut rec) {
-            let direction = Vec3::random_on_hemisphere(&rec.normal);
-            return 0.5 * self.ray_color(&Ray::new(rec.p, direction), world);
+        
+        if depth <= 0 {
+            return Color::ZERO;
+        }
+
+        if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec) {
+            let direction = rec.normal + Vec3::random_unit_vector();
+            return 0.1 * self.ray_color(&Ray::new(rec.p, direction), depth-1, world);
         }
         
         let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());
         let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
         
-        (1.0 - a)*Color::new(1.0, 1.0, 1.0) + a*Color::new(0.5, 0.7, 1.0)
+        (1.0 - a)*Color::ONE + a*Color::new(0.5, 0.7, 1.0)
     }
 }

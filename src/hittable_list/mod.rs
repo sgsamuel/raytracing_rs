@@ -35,8 +35,8 @@ impl HittableList {
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let mut temp_rec: HitRecord = HitRecord {
-            p: Point3::new(0.0, 0.0, 0.0),
-            normal: Vec3::new(0.0, 0.0, 0.0),
+            p: Point3::ZERO,
+            normal: Vec3::ZERO,
             t: 0.0,
             front_face: false
         };
