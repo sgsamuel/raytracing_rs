@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use super::utilities;
+
 #[derive(Clone, Copy, Debug)]
 pub enum Axis {
     X,
@@ -33,6 +35,23 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn random() -> Vec3 {
+        Vec3::new(utilities::random(), utilities::random(), utilities::random())
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Vec3 {
+        Vec3::new(
+            utilities::random_range(min, max), 
+            utilities::random_range(min, max), 
+            utilities::random_range(min, max)
+        )
+    }
+
+    pub fn sample_unit_square() -> Vec3 {
+        // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
+        Vec3::new(utilities::random() - 0.5, utilities::random() - 0.5, 0.0)
+    }
+
     pub fn component(&self, axis: Axis) -> f64 {
         match axis {
             Axis::X => self.x,
@@ -49,14 +68,37 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
+    #[inline(always)]
     pub fn unit_vector(v: &Vec3) -> Vec3 {
         v / v.length()
     }
 
+    #[inline(always)]
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p: Vec3 = Vec3::random_range(-1.0, 1.0);
+            let lensq: f64 = p.length_squared();
+            if f64::EPSILON < lensq && lensq <= 1.0 {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    #[inline(always)]
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+            return on_unit_sphere;
+        }
+        -on_unit_sphere
+    }
+
+    #[inline(always)]
     pub fn dot(v1: &Vec3, v2: &Vec3) -> f64 {
         v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
     }
 
+    #[inline(always)]
     pub fn cross(v1: &Vec3, v2: &Vec3) -> Vec3 {
         return Vec3 {
             x: v1.y * v2.z - v1.z * v2.y,
@@ -72,6 +114,7 @@ macro_rules! impl_unary_op {
         impl<'v1> $Op for &'v1 $VecType {
             type Output = $VecType;
 
+            #[inline(always)]
             fn $op_fn(self) -> Vec3 {
                 $VecType {
                   x: $op_sym self.x,
@@ -85,7 +128,7 @@ macro_rules! impl_unary_op {
         impl $Op for $VecType {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self) -> Vec3 {
               $op_sym &self
             }
@@ -112,7 +155,7 @@ macro_rules! impl_binary_op {
         impl $Op<$VecType> for $VecType {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: $VecType) -> $VecType {
               &self $op_sym &other
             }
@@ -122,7 +165,7 @@ macro_rules! impl_binary_op {
         impl<'v1> $Op<&'v1 $VecType> for $VecType {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: &'v1 $VecType) -> $VecType {
               &self $op_sym other
             }
@@ -132,7 +175,7 @@ macro_rules! impl_binary_op {
         impl<'v1> $Op<$VecType> for &'v1 $VecType {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: $VecType) -> $VecType {
               self $op_sym &other
             }
@@ -145,7 +188,8 @@ macro_rules! impl_float_op {
         // v: &Vec3, c: f64
         impl<'v> $Op<f64> for &'v $VecType {
             type Output = $VecType;
-      
+            
+            #[inline(always)]
             fn $op_fn(self, other: f64) -> $VecType {
               $VecType {
                 x: self.x $op_sym other,
@@ -159,7 +203,7 @@ macro_rules! impl_float_op {
         impl $Op<f64> for $VecType {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: f64) -> $VecType {
               &self $op_sym other
             }
@@ -169,7 +213,7 @@ macro_rules! impl_float_op {
         impl $Op<$VecType> for f64 {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: $VecType) -> $VecType {
               &other $op_sym self
             }
@@ -179,7 +223,7 @@ macro_rules! impl_float_op {
         impl<'v1> $Op<&'v1 $VecType> for f64 {
             type Output = $VecType;
       
-            #[inline]
+            #[inline(always)]
             fn $op_fn(self, other: &'v1 $VecType) -> $VecType {
               other $op_sym self
             }
@@ -191,6 +235,8 @@ macro_rules! impl_binary_op_assign {
     ($VecType:ident $OpAssign:ident $op_fn:ident $op_sym:tt) => {
         // v = &Vec3
         impl<'v> $OpAssign<&'v $VecType> for $VecType {
+
+            #[inline(always)]
             fn $op_fn(&mut self, other: &'v $VecType) {
                 *self = $VecType {
                     x: self.x $op_sym other.x,
@@ -202,7 +248,7 @@ macro_rules! impl_binary_op_assign {
   
         // v = Vec3
         impl $OpAssign for $VecType {
-            #[inline]
+            #[inline(always)]
             fn $op_fn(&mut self, other: $VecType) {
             *self = *self $op_sym &other
             }
@@ -213,6 +259,8 @@ macro_rules! impl_binary_op_assign {
 macro_rules! impl_float_op_assign {
     ($VecType:ident $OpAssign:ident $op_fn:ident $op_sym:tt) => {
         impl<'v> $OpAssign<f64> for $VecType {
+
+            #[inline(always)]
             fn $op_fn(&mut self, other: f64) {
                 *self = $VecType {
                     x: self.x $op_sym other,
