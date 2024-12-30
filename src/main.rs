@@ -9,16 +9,18 @@ use log::info;
 pub mod color;
 pub mod hittable;
 pub mod hittable_list;
+pub mod interval;
 pub mod ray;
 pub mod sphere;
 pub mod utilities;
 pub mod vec3;
 
 use color::*;
-use ray::*;
-use sphere::*;
 use hittable::*;
 use hittable_list::*;
+use interval::*;
+use ray::*;
+use sphere::*;
 use vec3::*;
 
 
@@ -45,7 +47,7 @@ pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
         front_face: false
     };
 
-    if world.hit(ray, 0.0, f64::INFINITY, &mut rec) {
+    if world.hit(ray, Interval::new(0.0, f64::INFINITY), &mut rec) {
         return 0.5 * (rec.normal + Color::new(1.0,1.0,1.0));
     }
     

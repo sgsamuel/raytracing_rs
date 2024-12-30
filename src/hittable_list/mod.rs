@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use super::hittable::{HitRecord, Hittable};
+use super::interval::Interval;
 use super::ray::Ray;
 use super::vec3::{Point3, Vec3};
 
@@ -15,7 +16,7 @@ impl HittableList {
         }
     }
 
-    pub fn with_object(object: Rc<dyn Hittable>) -> HittableList {
+    pub fn from_object(object: Rc<dyn Hittable>) -> HittableList {
         let mut list = HittableList::new();
         list.add(object);
         list
@@ -32,7 +33,7 @@ impl HittableList {
 
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
         let mut temp_rec: HitRecord = HitRecord {
             p: Point3::new(0.0, 0.0, 0.0),
             normal: Vec3::new(0.0, 0.0, 0.0),
@@ -41,10 +42,10 @@ impl Hittable for HittableList {
         };
 
         let mut hit_anything: bool = false;
-        let mut closest_so_far: f64 = ray_tmax;
+        let mut closest_so_far: f64 = ray_t.max;
 
         for object in &self.objects {
-            if object.hit(r, ray_tmin, closest_so_far, &mut temp_rec) {
+            if object.hit(ray, Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 *rec = temp_rec.clone();

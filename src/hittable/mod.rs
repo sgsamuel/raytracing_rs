@@ -1,3 +1,4 @@
+use super::interval::Interval;
 use super::ray::Ray;
 use super::vec3::{Point3, Vec3};
 
@@ -20,5 +21,5 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }
