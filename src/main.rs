@@ -4,11 +4,14 @@ use env_logger;
 use log::info;
 
 pub mod color;
+pub mod hittable;
 pub mod ray;
+pub mod sphere;
 pub mod vec3;
 
 use color::Color;
 use ray::Ray;
+use sphere::Sphere;
 use vec3::{Axis, Point3, Vec3};
 
 
@@ -30,26 +33,26 @@ impl Config {
 pub fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> f64 {
     let oc: Vec3 = center - ray.origin();
 
-    let a: f64 = vec3::Vec3::dot(ray.direction(), ray.direction());
-    let b: f64 = -2.0 * vec3::Vec3::dot(ray.direction(), &oc);
-    let c: f64 = vec3::Vec3::dot(&oc, &oc) - radius*radius;
+    let a: f64 = ray.direction().length_squared();
+    let h: f64 = Vec3::dot(&ray.direction(), &oc);
+    let c: f64 = oc.length_squared() - radius*radius;
 
-    let discriminant: f64 = b*b - 4.0*a*c;
+    let discriminant: f64 = h*h - a*c;
     if discriminant < 0.0 {
         return -1.0;
     }
 
-    (-b - discriminant.sqrt() ) / (2.0*a)
+    (h - discriminant.sqrt()) / a
 }
 
 pub fn ray_color(ray: &Ray) -> Color {
     let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray);
     if t > 0.0 {
-        let normal: Vec3 = vec3::Vec3::unit_vector(&(ray.at(t) - Vec3::new(0.0, 0.0, -1.0)));
+        let normal: Vec3 = Vec3::unit_vector(&(ray.at(t) - Vec3::new(0.0, 0.0, -1.0)));
         return 0.5*Color::new(normal.component(Axis::X) + 1.0, normal.component(Axis::Y) + 1.0, normal.component(Axis::Z) + 1.0);
     }
     
-    let unit_direction: Vec3 = vec3::Vec3::unit_vector(&ray.direction());
+    let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());
     let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
     
     (1.0 - a)*Color::new(1.0, 1.0, 1.0) + a*Color::new(0.5, 0.7, 1.0)
