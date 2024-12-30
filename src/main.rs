@@ -1,18 +1,25 @@
+use core::f64;
 use std::cmp::max;
+use std::rc::Rc;
+
 use dotenv::dotenv;
 use env_logger;
 use log::info;
 
 pub mod color;
 pub mod hittable;
+pub mod hittable_list;
 pub mod ray;
 pub mod sphere;
+pub mod utilities;
 pub mod vec3;
 
-use color::Color;
-use ray::Ray;
-use sphere::Sphere;
-use vec3::{Axis, Point3, Vec3};
+use color::*;
+use ray::*;
+use sphere::*;
+use hittable::*;
+use hittable_list::*;
+use vec3::*;
 
 
 #[derive(Debug)]
@@ -30,26 +37,16 @@ impl Config {
 }
 
 
-pub fn hit_sphere(center: &Point3, radius: f64, ray: &Ray) -> f64 {
-    let oc: Vec3 = center - ray.origin();
+pub fn ray_color(ray: &Ray, world: &dyn Hittable) -> Color {
+    let mut rec: HitRecord = HitRecord {
+        p: Point3::new(0.0, 0.0, 0.0),
+        normal: Vec3::new(0.0, 0.0, 0.0),
+        t: 0.0,
+        front_face: false
+    };
 
-    let a: f64 = ray.direction().length_squared();
-    let h: f64 = Vec3::dot(&ray.direction(), &oc);
-    let c: f64 = oc.length_squared() - radius*radius;
-
-    let discriminant: f64 = h*h - a*c;
-    if discriminant < 0.0 {
-        return -1.0;
-    }
-
-    (h - discriminant.sqrt()) / a
-}
-
-pub fn ray_color(ray: &Ray) -> Color {
-    let t = hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray);
-    if t > 0.0 {
-        let normal: Vec3 = Vec3::unit_vector(&(ray.at(t) - Vec3::new(0.0, 0.0, -1.0)));
-        return 0.5*Color::new(normal.component(Axis::X) + 1.0, normal.component(Axis::Y) + 1.0, normal.component(Axis::Z) + 1.0);
+    if world.hit(ray, 0.0, f64::INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Color::new(1.0,1.0,1.0));
     }
     
     let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());
@@ -71,7 +68,15 @@ fn main() {
     // Calculate the image height, and ensure that it's at least 1.
     let image_height: u32 = max((image_width as f64 / aspect_ratio) as u32, 1);
     
-    
+
+    // World
+
+    let mut world: HittableList = HittableList::new();
+
+    world.add(Rc::new(Sphere::new(Point3::new(0.0,0.0,-1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(Point3::new(0.0,-100.5,-1.0), 100.0)));
+
+
     // Camera
 
     let focal_length: f64 = 1.0;
@@ -107,7 +112,7 @@ fn main() {
             let ray_direction: Vec3 = pixel_center - camera_center;
             let camera_ray: Ray = Ray::new(camera_center, ray_direction);
 
-            let pixel_color = ray_color(&camera_ray);
+            let pixel_color = ray_color(&camera_ray, &world);
             color::write_color(pixel_color);
         }
     }
