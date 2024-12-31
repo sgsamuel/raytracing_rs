@@ -1,9 +1,13 @@
 use std::cmp::max;
+use std::io::{BufWriter, Write};
+use std::fs::File;
+use std::path::Path;
 use std::rc::Rc;
 use log::info;
 
 use super::color::{Color, write_color};
 use super::hittable::{Hittable, HitRecord};
+use super::hittable_list::HittableList;
 use super::interval::Interval;
 use super::material::Lambertian;
 use super::vec3::{Axis, Point3, Vec3};
@@ -61,10 +65,13 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &dyn Hittable) {
-        println!("P3");
-        println!("{} {}", self.image_width, self.image_height);
-        println!("255");
+    pub fn render(&self, world: &HittableList, output_filepath: &Path) {
+        let file = File::create(output_filepath).unwrap(); 
+        let mut writer = BufWriter::new(file);
+
+        writeln!(writer, "P3").unwrap();
+        writeln!(writer, "{} {}", self.image_width, self.image_height).unwrap();
+        writeln!(writer, "255").unwrap();
     
         for j in 0..self.image_height {
             info!("Scanlines remaining: {}", self.image_height - j);
@@ -75,9 +82,11 @@ impl Camera {
                     pixel_color += self.ray_color(&ray, self.max_depth, world);
                 }
 
-                write_color(self.pixel_samples_scale * pixel_color);
+                write_color(self.pixel_samples_scale * pixel_color, &mut writer);
             }
         }
+
+        writer.flush().unwrap();
     }
 
     fn get_ray(&self, i: u32, j: u32) -> Ray {
@@ -85,7 +94,7 @@ impl Camera {
         // point around the pixel location i, j.
 
         let random_offset: Vec3 = Vec3::sample_unit_square();
-        let pixel_sample = self.pixel00_loc
+        let pixel_sample: Vec3 = self.pixel00_loc
                             + (((i as f64) + random_offset.component(Axis::X)) * self.pixel_delta_u)
                             + (((j as f64) + random_offset.component(Axis::Y)) * self.pixel_delta_v);
 
@@ -95,11 +104,11 @@ impl Camera {
         return Ray::new(ray_origin, ray_direction);
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32, world: &dyn Hittable) -> Color {
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {
         let mut rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
-            mat:  Rc::new(Lambertian::new(Color::ZERO)),
+            mat: Rc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };
@@ -112,7 +121,7 @@ impl Camera {
             let mut attenuation: Color = Color::ZERO;
             let mut scattered: Ray = Ray::ZERO;
             if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
-                return attenuation * self.ray_color(ray, depth-1, world)
+                return attenuation * self.ray_color(&scattered, depth-1, world)
             }
 
             return Color::ZERO;
