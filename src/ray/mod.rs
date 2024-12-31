@@ -13,8 +13,8 @@ impl Ray {
         dir: Vec3::ZERO,
     };
 
-    pub fn new(origin: Point3, direction: Vec3) -> Ray {
-        Ray { orig: origin, dir: direction }
+    pub fn new(origin: Point3, direction: Vec3) -> Self {
+        Self { orig: origin, dir: direction }
     }
 
     pub fn origin(&self) -> &Point3 {

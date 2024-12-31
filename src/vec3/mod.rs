@@ -32,8 +32,8 @@ impl Vec3 {
         z: 1.0,
     };
 
-    pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
-        Vec3 { x, y, z }
+    pub fn new(x: f64, y: f64, z: f64) -> Self {
+        Self { x, y, z }
     }
 
     pub fn random() -> Vec3 {
@@ -103,6 +103,14 @@ impl Vec3 {
     #[inline]
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         v - 2.0 * Vec3::dot(v, n) * n
+    }
+
+    #[inline]
+    pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta: f64 = Vec3::dot(&-uv, n).min(1.0);
+        let r_out_perp: Vec3 =  etai_over_etat * (uv + cos_theta*n);
+        let r_out_parallel: Vec3 = -((1.0 - r_out_perp.length_squared()).abs().sqrt()) * n;
+        r_out_perp + r_out_parallel
     }
 
     #[inline]

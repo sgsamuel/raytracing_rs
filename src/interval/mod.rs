@@ -14,8 +14,8 @@ impl Interval {
         max: f64::INFINITY
     };
 
-    pub fn new(min: f64, max: f64) -> Interval {
-        Interval { min, max }
+    pub fn new(min: f64, max: f64) -> Self {
+        Self { min, max }
     }
 
     pub fn size(&self) -> f64 {

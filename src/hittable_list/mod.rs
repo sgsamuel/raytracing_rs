@@ -13,8 +13,8 @@ pub struct HittableList {
 }
 
 impl HittableList {
-    pub fn new() -> HittableList {
-        HittableList {
+    pub fn new() -> Self {
+        Self {
             objects: Vec::new(),
         }
     }
