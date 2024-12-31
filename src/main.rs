@@ -66,14 +66,19 @@ fn main() {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
     let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
     let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
 
+    let defocus_angle: f64      = 10.0;
+    let focus_dist: f64         = 3.4;
+
     let cam: Camera = Camera::new(
         aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup
+        vertical_fov, lookfrom, lookat, vup,
+        defocus_angle, focus_dist
     );
 
     cam.render(&world, output_filepath);

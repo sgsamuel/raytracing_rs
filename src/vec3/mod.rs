@@ -52,7 +52,7 @@ impl Vec3 {
         // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
         Vec3::new(utilities::random() - 0.5, utilities::random() - 0.5, 0.0)
     }
-
+    
     pub fn component(&self, axis: Axis) -> f64 {
         match axis {
             Axis::X => self.x,
@@ -87,6 +87,20 @@ impl Vec3 {
             let lensq: f64 = p.length_squared();
             if f64::EPSILON < lensq && lensq <= 1.0 {
                 return p / lensq.sqrt();
+            }
+        }
+    }
+
+    #[inline]
+    pub fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let p: Vec3 = Vec3::new(
+                utilities::random_range(-1.0, 1.0), 
+                utilities::random_range(-1.0, 1.0),
+                0.0
+            );
+            if p.length_squared() < 1.0 {
+                return p;
             }
         }
     }
