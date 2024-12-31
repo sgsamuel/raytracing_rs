@@ -21,7 +21,7 @@ use color::Color;
 use hittable_list::HittableList;
 use material::{Dielectric, Lambertian, Metal};
 use sphere::Sphere;
-use vec3::Point3;
+use vec3::{Point3, Vec3};
 
 
 #[derive(Debug)]
@@ -48,11 +48,11 @@ fn main() {
     // World
     let mut world: HittableList = HittableList::new();
 
-    let material_ground = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left   = Rc::new(Dielectric::new(1.5));
-    let material_bubble = Rc::new(Dielectric::new(1.0 / 1.5));
-    let material_right  = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.2));
+    let material_ground: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left: Rc<Dielectric>   = Rc::new(Dielectric::new(1.5));
+    let material_bubble: Rc<Dielectric> = Rc::new(Dielectric::new(1.0 / 1.5));
+    let material_right: Rc<Metal>       = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.2));
 
     world.add(Rc::new(Sphere::new(Point3::new(0.0,-100.5,-1.0), 100.0, material_ground)));
     world.add(Rc::new(Sphere::new(Point3::new(0.0,0.0,-1.2), 0.5, material_center)));
@@ -62,11 +62,19 @@ fn main() {
 
 
     // Camera
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: u32 = 400;
-    let samples_per_pixel: u32 = 100;
-    let max_depth: u32 = 50;
-    let cam: Camera = Camera::new(aspect_ratio, image_width, samples_per_pixel, max_depth);
+    let aspect_ratio: f64       = 16.0 / 9.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+    let vertical_fov: f64       = 20.0;
+    let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, max_depth, 
+        vertical_fov, lookfrom, lookat, vup
+    );
 
     cam.render(&world, output_filepath);
     
