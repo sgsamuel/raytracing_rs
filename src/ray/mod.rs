@@ -1,3 +1,4 @@
+use std::fmt;
 use super::vec3::{Point3, Vec3};
 
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +30,11 @@ impl Ray {
     }
 }
 
+impl fmt::Display for Ray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Origin: {}, Direction: {}", self.orig, self.dir)
+    }
+}
 
 #[cfg(test)]
 mod tests {

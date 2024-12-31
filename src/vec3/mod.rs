@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::fmt;
 
 use super::utilities;
 
@@ -116,6 +117,12 @@ impl Vec3 {
             y: v1.z * v2.x - v1.x * v2.z,
             z: v1.x * v2.y - v1.y * v2.x,
         };
+    }
+}
+
+impl fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.x, self.y, self.z)
     }
 }
 

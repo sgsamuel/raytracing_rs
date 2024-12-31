@@ -1,3 +1,4 @@
+use std::fmt;
 use std::rc::Rc;
 
 use super::hittable::{HitRecord, Hittable};
@@ -20,6 +21,12 @@ impl Sphere {
             radius: radius.max(0.0),
             mat
         }
+    }
+}
+
+impl fmt::Display for Sphere {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Center: {}; Radius: {}; Material: {}", self.center, self.radius, self.mat)
     }
 }
 

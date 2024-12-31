@@ -14,10 +14,10 @@ use super::vec3::{Axis, Point3, Vec3};
 use super::ray::Ray;
 
 pub struct Camera {
-    pub aspect_ratio: f64,      // Ratio of image width over height
-    pub image_width: u32,       // Rendered image width in pixel count
-    pub samples_per_pixel: u32, // Count of random samples for each pixel
-    pub max_depth: u32,              // Maximum number of ray bounces into scene
+    pub aspect_ratio: f64,          // Ratio of image width over height
+    pub image_width: u32,           // Rendered image width in pixel count
+    pub samples_per_pixel: u32,     // Count of random samples for each pixel
+    pub max_depth: u32,             // Maximum number of ray bounces into scene
 
     image_height: u32,
     pixel_samples_scale: f64,

@@ -1,9 +1,11 @@
+use std::fmt;
+
 use super::color::Color;
 use super::hittable::HitRecord;
 use super::ray::Ray;
 use super::vec3::Vec3;
 
-pub trait Material {
+pub trait Material: fmt::Display {
     fn scatter(
         &self, _ray_in: &Ray, _rec: &HitRecord, _attenuation: &mut Color, _scattered: &mut Ray
     ) -> bool {
@@ -38,6 +40,11 @@ impl Material for Lambertian {
     }
 }
 
+impl fmt::Display for Lambertian {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Material Lambertian. Albedo: {}", self.albedo)
+    }
+}
 
 pub struct Metal {
     albedo: Color,
@@ -63,5 +70,11 @@ impl Material for Metal {
         *attenuation = self.albedo;
 
         Vec3::dot(scattered.direction(), &rec.normal) > 0.0
+    }
+}
+
+impl fmt::Display for Metal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Material Metal. Albedo: {}; Fuzz: {}", self.albedo, self.fuzz)
     }
 }
