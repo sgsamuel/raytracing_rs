@@ -127,7 +127,8 @@ impl Camera {
         let ray_origin: Point3;
         if self.defocus_angle <= 0.0 {
             ray_origin = self.center;
-        } else {
+        }
+        else {
             ray_origin = self.defocus_disk_sample();
         }
 
