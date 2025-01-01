@@ -19,7 +19,7 @@ impl HittableList {
         }
     }
 
-    pub fn from_object(object: Rc<dyn Hittable>) -> HittableList {
+    pub fn with_object(object: Rc<dyn Hittable>) -> HittableList {
         let mut list = HittableList::new();
         list.add(object);
         list

@@ -43,13 +43,13 @@ fn main() {
     env_logger::init();
 
     // Output
-    let output_filepath = Path::new("final.ppm");
+    let output_filepath: &Path = Path::new("test.ppm");
 
     // World
     let mut world: HittableList = HittableList::new();
 
     let ground_material : Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    world.add(Rc::new(Sphere::new(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
+    world.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -67,38 +67,42 @@ fn main() {
                     // Lambertian
                     let albedo: Vec3 = Color::random() * Color::random();
                     sphere_material = Rc::new(Lambertian::new(albedo));
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let center2: Point3 = center + Vec3::new(0.0, utilities::random_range(0.0, 0.5), 0.0);
+                    world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
                 } 
                 else if choose_mat < 0.95 {
                     // Metal
                     let albedo: Color = Color::random_range(0.5, 1.0);
                     let fuzz: f64 = utilities::random_range(0.0, 0.5);
                     sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 } 
                 else {
                     // Dielectric
                     sphere_material = Rc::new(Dielectric::new(1.5));
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_material)));
+                    world.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 }
             }
         }
     }
 
     let dielectric_material: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    world.add(Rc::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
 
     let lambertian_material: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new(Point3::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
 
     let metal_material: Rc<Metal> = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Rc::new(Sphere::new(Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
+    world.add(Rc::new(Sphere::new_stationary(
+        Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
 
     // Camera
     let aspect_ratio: f64       = 16.0 / 9.0;
-    let image_width: u32        = 1200;
-    let samples_per_pixel: u32  = 500;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
 
     let vertical_fov: f64       = 20.0;
