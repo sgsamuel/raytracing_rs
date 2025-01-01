@@ -51,12 +51,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn origin_and_direction() {
+    fn origin_direction_time() {
         let orig: Point3 = Point3::new(3.0, 2.0, 1.0);
         let dir: Vec3 = Vec3::new(1.0, 2.0, 3.0);
-        let ray: Ray = Ray::new(orig, dir);
-        assert_eq!(ray.origin(), &orig);
-        assert_eq!(ray.direction(), &dir);
+        let ray1: Ray = Ray::new(orig, dir);
+
+        assert_eq!(ray1.origin(), &orig);
+        assert_eq!(ray1.direction(), &dir);
+        assert_eq!(ray1.time(), 0.0);
+
+        let tm: f64 = 0.5;
+        let ray2: Ray = Ray::with_time(orig, dir, tm);
+        assert_eq!(ray2.origin(), &orig);
+        assert_eq!(ray2.direction(), &dir);
+        assert_eq!(ray2.time(), tm);
     }
 
     #[test]

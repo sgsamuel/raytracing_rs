@@ -366,6 +366,18 @@ mod tests {
     }
 
     #[test]
+    fn refract() {
+        let uv: Vec3 = Vec3::new(1.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0);
+        let n: Vec3 = Vec3::ONE;
+        let etai_over_etat: f64 = 0.5;
+
+        assert_eq!(
+            Vec3::refract(&uv, &n, etai_over_etat), 
+            Vec3::new(-0.9023689270621825, -0.7357022603955159, -0.7357022603955159)
+        );
+    }
+
+    #[test]
     fn unit_vector() {
         let v: Vec3 = Vec3::new(3.0, 2.0, 1.0);
         let len: f64 = v.length();
