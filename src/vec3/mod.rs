@@ -1,6 +1,10 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::fmt;
 use std::slice::Iter;
+use rand::{
+    distributions::{Distribution, Standard},
+    Rng,
+};
 
 use super::utilities;
 
@@ -15,6 +19,16 @@ impl Axis {
     pub fn iterator() -> Iter<'static, Axis> {
         static AXES: [Axis; 3] = [Axis::X, Axis::Y, Axis::Z];
         AXES.iter()
+    }
+}
+
+impl Distribution<Axis> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Axis {
+        match rng.gen_range(0..=2) {
+            0 => Axis::X,
+            1 => Axis::Y,
+            _ => Axis::Z,
+        }
     }
 }
 
@@ -50,9 +64,9 @@ impl Vec3 {
 
     pub fn random_range(min: f64, max: f64) -> Vec3 {
         Vec3::new(
-            utilities::random_range(min, max), 
-            utilities::random_range(min, max), 
-            utilities::random_range(min, max)
+            utilities::random_f64_range(min, max), 
+            utilities::random_f64_range(min, max), 
+            utilities::random_f64_range(min, max)
         )
     }
 
@@ -103,8 +117,8 @@ impl Vec3 {
     pub fn random_in_unit_disk() -> Vec3 {
         loop {
             let p: Vec3 = Vec3::new(
-                utilities::random_range(-1.0, 1.0), 
-                utilities::random_range(-1.0, 1.0),
+                utilities::random_f64_range(-1.0, 1.0), 
+                utilities::random_f64_range(-1.0, 1.0),
                 0.0
             );
             if p.length_squared() < 1.0 {

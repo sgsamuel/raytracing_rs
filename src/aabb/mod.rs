@@ -16,7 +16,13 @@ impl AABB {
         z: Interval::EMPTY
     };
 
-    pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+    pub const UNIVERSE: AABB = AABB {
+        x: Interval::UNIVERSE,
+        y: Interval::UNIVERSE,
+        z: Interval::UNIVERSE
+    };
+
+    pub fn from_interval(x: Interval, y: Interval, z: Interval) -> Self {
         Self { x, y, z }
     }
 
@@ -52,6 +58,19 @@ impl AABB {
             Axis::X => self.x,
             Axis::Y => self.y,
             Axis::Z => self.z,
+        }
+    }
+
+    pub fn longest_axis(&self) -> Axis {
+        // Returns the index of the longest axis of the bounding box.
+        if self.x.size() >= self.y.size() && self.x.size() >= self.z.size() {
+            Axis::X
+        } 
+        else if self.y.size() >= self.z.size() {
+            Axis::Y
+        } 
+        else {
+            Axis::Z
         }
     }
 

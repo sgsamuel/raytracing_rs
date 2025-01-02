@@ -157,7 +157,7 @@ impl Camera {
             return Color::ZERO;
         }
 
-        if world.hit(ray, Interval::new(0.001, f64::INFINITY), &mut rec) {
+        if world.hit(ray, &mut Interval::new(0.001, f64::INFINITY), &mut rec) {
             let mut attenuation: Color = Color::ZERO;
             let mut scattered: Ray = Ray::ZERO;
             if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {

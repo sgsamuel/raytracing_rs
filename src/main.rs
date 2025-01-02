@@ -1,11 +1,11 @@
 use std::path::Path;
 use std::rc::Rc;
-
 use dotenv::dotenv;
 use env_logger;
 use log::info;
 
 pub mod aabb;
+pub mod bvh_node;
 pub mod color;
 pub mod camera;
 pub mod hittable;
@@ -17,6 +17,7 @@ pub mod sphere;
 pub mod utilities;
 pub mod vec3;
 
+use bvh_node::BVHNode;
 use camera::Camera;
 use color::Color;
 use hittable_list::HittableList;
@@ -39,14 +40,7 @@ impl Config {
     }
 }
 
-fn main() {
-    dotenv().ok();
-    env_logger::init();
-
-    // Output
-    let output_filepath: &Path = Path::new("test.ppm");
-
-    // World
+fn bouncing_spheres() -> HittableList {
     let mut world: HittableList = HittableList::new();
 
     let ground_material : Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
@@ -68,13 +62,13 @@ fn main() {
                     // Lambertian
                     let albedo: Vec3 = Color::random() * Color::random();
                     sphere_material = Rc::new(Lambertian::new(albedo));
-                    let center2: Point3 = center + Vec3::new(0.0, utilities::random_range(0.0, 0.5), 0.0);
+                    let center2: Point3 = center + Vec3::new(0.0, utilities::random_f64_range(0.0, 0.5), 0.0);
                     world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
                 } 
                 else if choose_mat < 0.95 {
                     // Metal
                     let albedo: Color = Color::random_range(0.5, 1.0);
-                    let fuzz: f64 = utilities::random_range(0.0, 0.5);
+                    let fuzz: f64 = utilities::random_f64_range(0.0, 0.5);
                     sphere_material = Rc::new(Metal::new(albedo, fuzz));
                     world.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 } 
@@ -99,6 +93,20 @@ fn main() {
     world.add(Rc::new(Sphere::new_stationary(
         Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
+    world
+}
+
+fn main() {
+    dotenv().ok();
+    env_logger::init();
+
+    // Output
+    let output_filepath: &Path = Path::new("test.ppm");
+
+    // World
+    let mut scene: HittableList = bouncing_spheres();
+    let bvh_scene: Rc<BVHNode> = Rc::new(BVHNode::from_hittable_list(&mut scene));
+    let world: HittableList = HittableList::from_object(bvh_scene);
 
     // Camera
     let aspect_ratio: f64       = 16.0 / 9.0;

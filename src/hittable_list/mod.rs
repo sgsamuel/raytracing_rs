@@ -22,7 +22,7 @@ impl HittableList {
         }
     }
 
-    pub fn with_object(object: Rc<dyn Hittable>) -> HittableList {
+    pub fn from_object(object: Rc<dyn Hittable>) -> HittableList {
         let mut list = HittableList::new();
         list.add(object);
         list
@@ -40,7 +40,7 @@ impl HittableList {
 
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
         let mut temp_rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
@@ -53,7 +53,7 @@ impl Hittable for HittableList {
         let mut closest_so_far: f64 = ray_t.max;
 
         for object in &self.objects {
-            if object.hit(ray, Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
+            if object.hit(ray, &mut Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
                 *rec = temp_rec.clone();

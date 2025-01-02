@@ -12,6 +12,6 @@ pub fn random() -> f64 {
 }
 
 #[inline]
-pub fn random_range(min: f64, max: f64) -> f64 {
+pub fn random_f64_range(min: f64, max: f64) -> f64 {
     return rand::thread_rng().gen_range(min..max);
 }
