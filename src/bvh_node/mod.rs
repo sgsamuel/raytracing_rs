@@ -42,14 +42,14 @@ impl BVHNode {
             right = objects[1].clone();
         } 
         else {
+            let mid: usize = object_span / 2;
             let obj_slice = &mut objects[..];   
-            obj_slice.sort_by(
+            obj_slice.select_nth_unstable_by(mid, 
                 |a, b| {
                     BVHNode::box_compare(a, b, bounding_box.longest_axis())
                 }
             );
 
-            let mid: usize = object_span / 2;
             left = Rc::new(BVHNode::from_slice(&mut objects[..mid]));
             right = Rc::new(BVHNode::from_slice(&mut objects[mid..]));
         }
