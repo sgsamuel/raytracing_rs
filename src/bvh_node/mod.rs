@@ -23,35 +23,35 @@ impl Display for BVHNode {
 }
 
 impl BVHNode {
-    pub fn from_vector(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
+    pub fn from_slice(objects: &mut [Rc<dyn Hittable>]) -> Self {
         let mut bounding_box: AABB = AABB::EMPTY;
         for object in &mut *objects {
             bounding_box = AABB::from_bounding_box(&bounding_box, object.bounding_box());
         }
 
-        let object_span: usize = end - start;
+        let object_span: usize = objects.len();
 
         let left: Rc<dyn Hittable>;
         let right: Rc<dyn Hittable>;
         if object_span == 1 {
-            left = objects[start].clone();
-            right = objects[start].clone();
+            left = objects[0].clone();
+            right = objects[0].clone();
         } 
         else if object_span == 2 {
-            left = objects[start].clone();
-            right = objects[start + 1].clone();
+            left = objects[0].clone();
+            right = objects[1].clone();
         } 
         else {
-            let obj_slice = &mut objects[start..end];   
+            let obj_slice = &mut objects[..];   
             obj_slice.sort_by(
                 |a, b| {
                     BVHNode::box_compare(a, b, bounding_box.longest_axis())
                 }
             );
 
-            let mid: usize = start + object_span / 2;
-            left = Rc::new(BVHNode::from_vector(objects, start, mid));
-            right = Rc::new(BVHNode::from_vector(objects, mid, end));
+            let mid: usize = object_span / 2;
+            left = Rc::new(BVHNode::from_slice(&mut objects[..mid]));
+            right = Rc::new(BVHNode::from_slice(&mut objects[mid..]));
         }
 
         let bounding_box: AABB = AABB::from_bounding_box(left.bounding_box(), right.bounding_box());
@@ -61,8 +61,7 @@ impl BVHNode {
     }
 
     pub fn from_hittable_list(list: &mut HittableList) -> Self {
-        let hittable_list_len: usize = list.objects.len();
-        Self::from_vector(&mut list.objects, 0, hittable_list_len)
+        Self::from_slice(&mut list.objects)
     }
 
     fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: Axis) -> Ordering {
