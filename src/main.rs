@@ -52,7 +52,7 @@ fn bouncing_spheres() -> HittableList {
             let center: Point3 = Point3::new(
                 a as f64 + 0.9 * utilities::random(), 
                 0.2, 
-                b as f64 + 0.9*utilities::random()
+                b as f64 + 0.9 * utilities::random()
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {

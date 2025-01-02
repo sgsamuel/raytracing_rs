@@ -2,9 +2,10 @@ use std::cmp::Ordering;
 use std::rc::Rc;
 
 use super::aabb::AABB;
-use super::hittable::Hittable;
+use super::hittable::{HitRecord, Hittable};
 use super::hittable_list::HittableList;
 use super::interval::Interval;
+use super::ray::Ray;
 use super::vec3::Axis;
 
 #[derive(Clone)]
@@ -42,7 +43,7 @@ impl BVHNode {
                 }
             );
 
-            let mid: usize = start + object_span/2;
+            let mid: usize = start + object_span / 2;
             left = Rc::new(BVHNode::from_vector(objects, start, mid));
             right = Rc::new(BVHNode::from_vector(objects, mid, end));
         }
@@ -72,7 +73,7 @@ impl BVHNode {
 }
 
 impl Hittable for BVHNode {
-    fn hit(&self, ray: &crate::ray::Ray, ray_t: &mut Interval, rec: &mut crate::hittable::HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
         if !self.bounding_box.hit(ray, ray_t) {
             return false
         }
