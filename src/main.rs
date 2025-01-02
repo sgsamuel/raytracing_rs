@@ -1,5 +1,6 @@
 use std::path::Path;
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 use dotenv::dotenv;
 use env_logger;
 use log::info;
@@ -40,7 +41,8 @@ impl Config {
     }
 }
 
-fn simple_spheres() -> HittableList {
+fn simple_spheres() -> (HittableList, Camera) {
+    // Scene
     let mut scene: HittableList = HittableList::new();
 
     let material_ground: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
@@ -55,10 +57,32 @@ fn simple_spheres() -> HittableList {
     scene.add(Rc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
     scene.add(Rc::new(Sphere::new_stationary(Point3::new(1.0,0.0,-1.0), 0.5, material_right)));
 
-    scene
+
+    // Camera
+    let aspect_ratio: f64       = 16.0 / 9.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+
+    let vertical_fov: f64       = 20.0;
+    let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 10.0;
+    let focus_dist: f64         = 3.4;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, max_depth, 
+        vertical_fov, lookfrom, lookat, vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
 }
 
-fn bouncing_spheres() -> HittableList {
+fn bouncing_spheres() -> (HittableList, Camera) {
+    // Scene
     let mut scene: HittableList = HittableList::new();
 
     let ground_material : Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
@@ -111,20 +135,6 @@ fn bouncing_spheres() -> HittableList {
     scene.add(Rc::new(Sphere::new_stationary(
         Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
-    scene
-}
-
-fn main() {
-    dotenv().ok();
-    env_logger::init();
-
-    // Output
-    let output_filepath: &Path = Path::new("test.ppm");
-
-    // World
-    let mut scene: HittableList = simple_spheres();
-    let bvh_scene: Rc<BVHNode> = Rc::new(BVHNode::from_hittable_list(&mut scene));
-    let world: HittableList = HittableList::from_object(bvh_scene);
 
     // Camera
     let aspect_ratio: f64       = 16.0 / 9.0;
@@ -133,12 +143,12 @@ fn main() {
     let max_depth: u32          = 50;
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
+    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
     let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
 
-    let defocus_angle: f64      = 10.0;
-    let focus_dist: f64         = 3.4;
+    let defocus_angle: f64      = 0.6;
+    let focus_dist: f64         = 10.0;
 
     let cam: Camera = Camera::new(
         aspect_ratio, image_width, samples_per_pixel, max_depth, 
@@ -146,7 +156,24 @@ fn main() {
         defocus_angle, focus_dist
     );
 
+    (scene, cam)
+}
+
+fn main() {
+    dotenv().ok();
+    env_logger::init();
+    let now: Instant = Instant::now();
+
+    // Output
+    let output_filepath: &Path = Path::new("test.ppm");
+
+    // World + Camera
+    let (mut scene, cam) = bouncing_spheres();
+    let bvh_scene: Rc<BVHNode> = Rc::new(BVHNode::from_hittable_list(&mut scene));
+    let world: HittableList = HittableList::from_object(bvh_scene);
+
     cam.render(&world, output_filepath);
     
-    info!("Done");
+    let elapsed: Duration = now.elapsed();
+    info!("Done. Time elapsed {:.2?}", elapsed);
 }

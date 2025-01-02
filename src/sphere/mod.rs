@@ -49,7 +49,7 @@ impl fmt::Display for Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_t: &mut Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
         let current_center: Point3 = self.center.at(ray.time());
         let oc: Vec3 = current_center - ray.origin();
 

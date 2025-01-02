@@ -74,7 +74,7 @@ impl AABB {
         }
     }
 
-    pub fn hit(&self, ray: &Ray, ray_t: &mut Interval) -> bool {
+    pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> bool {
         let ray_orig: &Point3 = ray.origin();
         let ray_dir: &Vec3  = ray.direction();
 
@@ -85,10 +85,10 @@ impl AABB {
             let t0 = (ax_ivl.min - ray_orig.component(axis)) * ad_inv;
             let t1 = (ax_ivl.max - ray_orig.component(axis)) * ad_inv;
  
-            ray_t.min = f64::max(ray_t.min, f64::min(t0, t1));
-            ray_t.max = f64::min(ray_t.max, f64::max(t0, t1));
+            let min_check: f64 = f64::max(ray_t.min, f64::min(t0, t1));
+            let max_check: f64 = f64::min(ray_t.max, f64::max(t0, t1));
 
-            if ray_t.max <= ray_t.min {
+            if max_check <= min_check {
                 return false;
             }
         }
