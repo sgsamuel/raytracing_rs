@@ -40,11 +40,29 @@ impl Config {
     }
 }
 
+fn simple_spheres() -> HittableList {
+    let mut scene: HittableList = HittableList::new();
+
+    let material_ground: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left: Rc<Dielectric>   = Rc::new(Dielectric::new(1.5));
+    let material_bubble: Rc<Dielectric> = Rc::new(Dielectric::new(1.0 / 1.5));
+    let material_right: Rc<Metal>       = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.2));
+
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-100.5,-1.0), 100.0, material_ground)));
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,0.0,-1.2), 0.5, material_center)));
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.5, material_left)));
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(1.0,0.0,-1.0), 0.5, material_right)));
+
+    scene
+}
+
 fn bouncing_spheres() -> HittableList {
-    let mut world: HittableList = HittableList::new();
+    let mut scene: HittableList = HittableList::new();
 
     let ground_material : Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    world.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
+    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -63,37 +81,37 @@ fn bouncing_spheres() -> HittableList {
                     let albedo: Vec3 = Color::random() * Color::random();
                     sphere_material = Rc::new(Lambertian::new(albedo));
                     let center2: Point3 = center + Vec3::new(0.0, utilities::random_f64_range(0.0, 0.5), 0.0);
-                    world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
+                    scene.add(Rc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
                 } 
                 else if choose_mat < 0.95 {
                     // Metal
                     let albedo: Color = Color::random_range(0.5, 1.0);
                     let fuzz: f64 = utilities::random_f64_range(0.0, 0.5);
                     sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    world.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
+                    scene.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 } 
                 else {
                     // Dielectric
                     sphere_material = Rc::new(Dielectric::new(1.5));
-                    world.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
+                    scene.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 }
             }
         }
     }
 
     let dielectric_material: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    world.add(Rc::new(Sphere::new_stationary(
+    scene.add(Rc::new(Sphere::new_stationary(
         Point3::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
 
     let lambertian_material: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new_stationary(
+    scene.add(Rc::new(Sphere::new_stationary(
         Point3::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
 
     let metal_material: Rc<Metal> = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Rc::new(Sphere::new_stationary(
+    scene.add(Rc::new(Sphere::new_stationary(
         Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
-    world
+    scene
 }
 
 fn main() {
@@ -104,7 +122,7 @@ fn main() {
     let output_filepath: &Path = Path::new("test.ppm");
 
     // World
-    let mut scene: HittableList = bouncing_spheres();
+    let mut scene: HittableList = simple_spheres();
     let bvh_scene: Rc<BVHNode> = Rc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
@@ -115,12 +133,12 @@ fn main() {
     let max_depth: u32          = 50;
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
+    let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
     let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
 
-    let defocus_angle: f64      = 0.6;
-    let focus_dist: f64         = 10.0;
+    let defocus_angle: f64      = 10.0;
+    let focus_dist: f64         = 3.4;
 
     let cam: Camera = Camera::new(
         aspect_ratio, image_width, samples_per_pixel, max_depth, 

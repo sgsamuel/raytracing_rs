@@ -118,7 +118,6 @@ impl Camera {
     fn get_ray(&self, i: u32, j: u32) -> Ray {
         // Construct a camera ray originating from the defocus disk and directed at a randomly
         // sampled point around the pixel location i, j.
-
         let random_offset: Vec3 = Vec3::sample_unit_square();
         let pixel_sample: Vec3 = self.pixel00_loc
                             + (((i as f64) + random_offset.component(Axis::X)) * self.pixel_delta_u)

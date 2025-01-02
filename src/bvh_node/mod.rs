@@ -1,5 +1,8 @@
 use std::cmp::Ordering;
 use std::rc::Rc;
+use std::fmt::{Display, Formatter};
+
+use log::debug;
 
 use super::aabb::AABB;
 use super::hittable::{HitRecord, Hittable};
@@ -15,10 +18,15 @@ pub struct BVHNode {
     bounding_box: AABB
 }
 
+impl Display for BVHNode {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("BVH {{ bbox: {:?} }}", self.bounding_box))
+    }
+}
+
 impl BVHNode {
     pub fn from_vector(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
         let mut bounding_box: AABB = AABB::EMPTY;
-
         for object in &mut *objects {
             bounding_box = AABB::from_bounding_box(&bounding_box, object.bounding_box());
         }
@@ -30,13 +38,15 @@ impl BVHNode {
         if object_span == 1 {
             left = objects[start].clone();
             right = objects[start].clone();
+            debug!("1 Start {}; End {}", start, end);
         } 
         else if object_span == 2 {
             left = objects[start].clone();
-            right = objects[start+1].clone();
+            right = objects[start + 1].clone();
+            debug!("2 Start {}; End {}", start, end);
         } 
         else {
-            let obj_slice = &mut objects[start..end];
+            let obj_slice = &mut objects[start..end];   
             obj_slice.sort_by(
                 |a, b| {
                     BVHNode::box_compare(a, b, bounding_box.longest_axis())
@@ -46,11 +56,15 @@ impl BVHNode {
             let mid: usize = start + object_span / 2;
             left = Rc::new(BVHNode::from_vector(objects, start, mid));
             right = Rc::new(BVHNode::from_vector(objects, mid, end));
+            
+            debug!("Split Start {}; End {}", start, end);
         }
 
-        let bounding_box = AABB::from_bounding_box(left.bounding_box(), right.bounding_box());
+        let bounding_box: AABB = AABB::from_bounding_box(left.bounding_box(), right.bounding_box());
 
-        Self { left, right, bounding_box }
+        let obj: BVHNode = Self { left, right, bounding_box };
+        debug!("BVH Node Bounding Box: {}", obj);
+        obj
     }
 
     pub fn from_hittable_list(list: &mut HittableList) -> Self {
@@ -87,8 +101,8 @@ impl Hittable for BVHNode {
             right_ray_max = ray_t.max;
         }
         let hit_right: bool = self.right.hit(ray, &mut Interval::new(ray_t.min, right_ray_max), rec);
-
-        hit_left || hit_right
+        
+        hit_right || hit_left
     }
 
     fn bounding_box(&self) -> &AABB {
