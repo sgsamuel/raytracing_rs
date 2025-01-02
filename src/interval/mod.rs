@@ -1,3 +1,4 @@
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Interval {
     pub min: f64,
     pub max: f64
@@ -16,6 +17,14 @@ impl Interval {
 
     pub fn new(min: f64, max: f64) -> Self {
         Self { min, max }
+    }
+
+    pub fn from_interval(a: &Interval, b: &Interval) -> Self {
+        // Create the interval tightly enclosing the two input intervals.
+        Self {
+            min: f64::min(a.min, b.min),
+            max: f64::max(a.max, b.max)
+        }
     }
 
     pub fn size(&self) -> f64 {

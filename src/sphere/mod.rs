@@ -1,6 +1,7 @@
 use std::fmt;
 use std::rc::Rc;
 
+use super::aabb::AABB;
 use super::hittable::{HitRecord, Hittable};
 use super::interval::Interval;
 use super::material::Material;
@@ -12,22 +13,31 @@ pub struct Sphere {
     center: Ray,
     radius: f64,
     mat: Rc<dyn Material>,
+    bounding_box: AABB
 }
 
 impl Sphere {
-    pub fn new_stationary(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn new_stationary(static_center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        let rvec: Vec3 = radius * Vec3::ONE;
         Self {
-            center: Ray::new(center, Vec3::ZERO),
+            center: Ray::new(static_center, Vec3::ZERO),
             radius: radius.max(0.0),
-            mat
+            mat,
+            bounding_box: AABB::from_point(&(static_center - rvec), &(static_center + rvec))
         }
     }
 
     pub fn new_moving(center1: Point3, center2: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        let center: Ray = Ray::new(center1, center2 - center1);
+        let rvec: Vec3 = radius * Vec3::ONE;
+        let box1: AABB = AABB::from_point(&(center.at(0.0) - rvec), &(center.at(0.0) + rvec));
+        let box2: AABB = AABB::from_point(&(center.at(1.0) - rvec), &(center.at(1.0) + rvec));
+        let bounding_box: AABB = AABB::from_bounding_box(&box1, &box2);
         Self {
-            center: Ray::new(center1, center2 - center1),
+            center,
             radius: radius.max(0.0),
-            mat
+            mat,
+            bounding_box
         }
     }
 }
@@ -70,5 +80,9 @@ impl Hittable for Sphere {
         rec.mat = self.mat.clone();
 
         true
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }

@@ -1,5 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::fmt;
+use std::slice::Iter;
 
 use super::utilities;
 
@@ -8,6 +9,13 @@ pub enum Axis {
     X,
     Y,
     Z,
+}
+
+impl Axis {
+    pub fn iterator() -> Iter<'static, Axis> {
+        static AXES: [Axis; 3] = [Axis::X, Axis::Y, Axis::Z];
+        AXES.iter()
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

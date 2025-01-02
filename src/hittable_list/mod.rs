@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use super::aabb::AABB;
 use super::color::Color;
 use super::hittable::{HitRecord, Hittable};
 use super::interval::Interval;
@@ -10,12 +11,14 @@ use super::vec3::{Point3, Vec3};
 #[derive(Clone)]
 pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
+    bounding_box: AABB
 }
 
 impl HittableList {
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),
+            bounding_box: AABB::EMPTY
         }
     }
 
@@ -30,6 +33,7 @@ impl HittableList {
     }
 
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.bounding_box = AABB::from_bounding_box(&self.bounding_box, object.bounding_box());
         self.objects.push(object);
     }
 }
@@ -57,5 +61,9 @@ impl Hittable for HittableList {
         }
 
         hit_anything
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
     }
 }

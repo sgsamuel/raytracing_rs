@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use super::aabb::AABB;
 use super::interval::Interval;
 use super::material::Material;
 use super::ray::Ray;
@@ -28,4 +29,6 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
+
+    fn bounding_box(&self) -> &AABB;
 }

@@ -5,6 +5,7 @@ use dotenv::dotenv;
 use env_logger;
 use log::info;
 
+pub mod aabb;
 pub mod color;
 pub mod camera;
 pub mod hittable;
