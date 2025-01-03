@@ -1,19 +1,29 @@
 use std::fmt;
+use std::path::Path;
 use std::sync::Arc;
 
+use image::{DynamicImage, GenericImageView};
+
 use super::color::Color;
+use super::interval::Interval;
 use super::vec3::{Axis, Point3};
 
 pub trait Texture: Send + Sync + fmt::Display {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
+    fn value(&self, uv: (f64, f64), point: &Point3) -> Color;
 }
 
 
-pub struct SolidTexture {
+pub struct Solid {
     albedo: Color
 }
 
-impl SolidTexture {
+impl fmt::Display for Solid {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Solid Texture Albedo: {}", self.albedo)
+    }
+}
+
+impl Solid {
     pub fn new(albedo: &Color) -> Self {
         Self { albedo: *albedo }
     }
@@ -23,26 +33,26 @@ impl SolidTexture {
     }
 }
 
-impl Texture for SolidTexture {
-    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+impl Texture for Solid {
+    fn value(&self, _uv: (f64, f64), _point: &Point3) -> Color {
         self.albedo
     }
 }
 
-impl fmt::Display for SolidTexture {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Solid Texture Albedo: {}", self.albedo)
-    }
-}
 
-
-pub struct CheckerTexture {
+pub struct Checker {
     inv_scale: f64,
     even: Arc<dyn Texture>,
     odd: Arc<dyn Texture>
 }
 
-impl CheckerTexture {
+impl fmt::Display for Checker {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Checker Texture InvScale: {}; Even: {}; Odd: {}", self.inv_scale, self.even, self.odd)
+    }
+}
+
+impl Checker {
     pub fn new(scale: f64, even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
         Self { inv_scale: 1.0 / scale, even, odd }
     }
@@ -50,27 +60,62 @@ impl CheckerTexture {
     pub fn from_color(scale: f64, color1: &Color, color2: &Color) -> Self {
         Self::new(
             scale, 
-            Arc::new(SolidTexture::new(color1)),
-            Arc::new(SolidTexture::new(color2))
+            Arc::new(Solid::new(color1)),
+            Arc::new(Solid::new(color2))
         )
     }
 }
 
-impl Texture for CheckerTexture {
-    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
-        let x_int: i32 = (self.inv_scale * p.component(Axis::X)).floor() as i32;
-        let y_int: i32 = (self.inv_scale * p.component(Axis::Y)).floor() as i32;
-        let z_int: i32 = (self.inv_scale * p.component(Axis::Z)).floor() as i32;
+impl Texture for Checker {
+    fn value(&self, uv: (f64, f64), point: &Point3) -> Color {
+        let x_int: i32 = (self.inv_scale * point.component(Axis::X)).floor() as i32;
+        let y_int: i32 = (self.inv_scale * point.component(Axis::Y)).floor() as i32;
+        let z_int: i32 = (self.inv_scale * point.component(Axis::Z)).floor() as i32;
 
         if (x_int + y_int + z_int) % 2 == 0 {
-            return self.even.value(u, v, p);
+            return self.even.value(uv, point);
         }
-        self.odd.value(u, v, p)
+        self.odd.value(uv, point)
     }
 }
 
-impl fmt::Display for CheckerTexture {
+
+pub struct Image {
+    img: DynamicImage
+}
+
+impl fmt::Display for Image {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Checker Texture InvScale: {}; Even: {}; Odd: {}", self.inv_scale, self.even, self.odd)
+        write!(f, "Image Texture")
+    }
+}
+
+impl Image {
+    pub fn read_image(filepath: &Path) -> Result<Self, String> {
+        let img: DynamicImage = image::open(filepath).map_err(|err| err.to_string())?;
+        Ok(Self { img })
+    }
+}
+
+impl Texture for Image {
+    fn value(&self, uv: (f64, f64), _point: &Point3) -> Color {
+        if self.img.height() == 0 {
+            return Color::new(0.0, 1.0, 1.0);
+        }
+
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        let clamped_u: f64 = Interval::UNIT.clamp(uv.0);
+        let clamped_v: f64 = 1.0 - Interval::UNIT.clamp(uv.1);  // Flip V to image coordinates
+
+        let x: u32 = (clamped_u * self.img.width() as f64) as u32;
+        let y: u32 = (clamped_v * self.img.height() as f64) as u32;
+        let pixel = self.img.get_pixel(x, y);
+
+        let color_scale: f64 = 1.0 / 255.0;
+        Color::new(
+            color_scale * f64::from(pixel[0]), 
+            color_scale * f64::from(pixel[1]), 
+            color_scale * f64::from(pixel[2])
+        )
     }
 }

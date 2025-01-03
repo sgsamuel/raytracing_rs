@@ -1,3 +1,4 @@
+use core::f64;
 use std::fmt;
 use std::sync::Arc;
 
@@ -6,7 +7,7 @@ use super::hittable::{HitRecord, Hittable};
 use super::interval::Interval;
 use super::material::Material;
 use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use super::vec3::{Axis, Point3, Vec3};
 
 #[derive(Clone)]
 pub struct Sphere {
@@ -39,6 +40,20 @@ impl Sphere {
             mat,
             bounding_box
         }
+    }
+
+    fn get_sphere_uv(p: &Point3) -> (f64, f64) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     (1, 0, 0) yields (0.50, 0.50)       (-1,  0,  0) yields (0.00, 0.50)
+        //     (0, 1, 0) yields (0.50, 1.00)       ( 0, -1,  0) yields (0.50, 0.00)
+        //     (0, 0, 1) yields (0.25, 0.50)       ( 0,  0, -1) yields (0.75, 0.50)
+
+        let theta: f64 = f64::acos(-p.component(Axis::Y));
+        let phi: f64 = f64::atan2(-p.component(Axis::Z), p.component(Axis::X)) + f64::consts::PI;
+
+        (phi / (2.0 * f64::consts::PI), theta / f64::consts::PI)
     }
 }
 
@@ -75,7 +90,15 @@ impl Hittable for Sphere {
 
         let ray_root: Vec3 = ray.at(root);
         let outward_normal: Vec3 = (ray_root - current_center) / self.radius;
-        let rec: HitRecord = HitRecord::new(ray_root, self.mat.clone(), root, ray, &outward_normal);
+        let uv: (f64, f64) = Sphere::get_sphere_uv(&outward_normal);
+        let rec: HitRecord = HitRecord::new(
+            ray_root, 
+            self.mat.clone(), 
+            root, 
+            uv, 
+            ray, 
+            &outward_normal
+        );
         
         Some(rec)
     }

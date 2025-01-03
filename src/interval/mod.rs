@@ -15,6 +15,11 @@ impl Interval {
         max: f64::INFINITY
     };
 
+    pub const UNIT: Interval = Interval {
+        min: 0.0,
+        max: 1.0
+    };
+
     pub fn new(min: f64, max: f64) -> Self {
         Self { min, max }
     }

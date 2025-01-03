@@ -4,7 +4,7 @@ use std::sync::Arc;
 use super::color::Color;
 use super::hittable::HitRecord;
 use super::ray::Ray;
-use super::texture::{Texture, SolidTexture};
+use super::texture::{Texture, Solid};
 use super::utilities;
 use super::vec3::Vec3;
 
@@ -19,9 +19,15 @@ pub struct Lambertian {
     texture: Arc<dyn Texture>
 }
 
+impl fmt::Display for Lambertian {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Material Lambertian. Texture: {}", self.texture)
+    }
+}
+
 impl Lambertian {
     pub fn from_color(albedo: &Color) -> Self {
-        Self { texture: Arc::new(SolidTexture::new(albedo)) }
+        Self { texture: Arc::new(Solid::new(albedo)) }
     }
 
     pub fn from_texture(texture: Arc<dyn Texture>) -> Self {
@@ -31,22 +37,16 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
 
         // Catch degenerate scatter direction
         if scatter_direction.near_zero() {
             scatter_direction = rec.normal;
         }
         
-        let attenuation: Color = self.texture.value(rec.u, rec.v, &rec.p);
+        let attenuation: Color = self.texture.value(rec.uv, &rec.p);
         let scattered: Ray = Ray::with_time(&rec.p, &scatter_direction, ray_in.time());
         Some((attenuation, scattered))
-    }
-}
-
-impl fmt::Display for Lambertian {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Material Lambertian. Texture: {}", self.texture)
     }
 }
 
@@ -54,6 +54,12 @@ impl fmt::Display for Lambertian {
 pub struct Metal {
     albedo: Color,
     fuzz: f64
+}
+
+impl fmt::Display for Metal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Material Metal. Albedo: {}; Fuzz: {}", self.albedo, self.fuzz)
+    }
 }
 
 impl Metal {
@@ -79,15 +85,15 @@ impl Material for Metal {
     }
 }
 
-impl fmt::Display for Metal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Material Metal. Albedo: {}; Fuzz: {}", self.albedo, self.fuzz)
-    }
-}
-
 
 pub struct Dielectric {
     refractive_index: f64
+}
+
+impl fmt::Display for Dielectric {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Material Dielectric. Refractive Index: {}", self.refractive_index)
+    }
 }
 
 impl Dielectric {
@@ -125,11 +131,5 @@ impl Material for Dielectric {
         let attenuation: Color = Color::ONE;
         let scattered: Ray = Ray::with_time(&rec.p, &direction, ray_in.time());
         Some((attenuation, scattered))
-    }
-}
-
-impl fmt::Display for Dielectric {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Material Dielectric. Refractive Index: {}", self.refractive_index)
     }
 }

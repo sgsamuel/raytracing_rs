@@ -51,8 +51,7 @@ impl Hittable for HittableList {
             normal: Vec3::ZERO,
             mat: Arc::new(Lambertian::from_color(&Color::ZERO)),
             t: 0.0,
-            u: 0.0,
-            v: 0.0,
+            uv: (0.0, 0.0),
             front_face: false
         };
 

@@ -8,6 +8,12 @@ pub struct Ray {
     tm: f64
 }
 
+impl fmt::Display for Ray {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Origin: {}, Direction: {}", self.orig, self.dir)
+    }
+}
+
 impl Ray {
     pub const ZERO: Ray = Ray {
         orig: Point3::ZERO,
@@ -40,11 +46,6 @@ impl Ray {
     }
 }
 
-impl fmt::Display for Ray {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Origin: {}, Direction: {}", self.orig, self.dir)
-    }
-}
 
 #[cfg(test)]
 mod tests {

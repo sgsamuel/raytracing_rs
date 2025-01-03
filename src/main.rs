@@ -24,7 +24,7 @@ use color::Color;
 use hittable_list::HittableList;
 use material::{Dielectric, Lambertian, Material, Metal};
 use sphere::Sphere;
-use texture::CheckerTexture;
+use texture::{Checker, Image};
 use vec3::{Point3, Vec3};
 
 
@@ -88,11 +88,8 @@ fn bouncing_spheres() -> (HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
-    let ground_texture : Arc<CheckerTexture> = Arc::new(
-        CheckerTexture::from_color(
-            0.32, 
-            &Color::new(0.2, 0.3, 0.1),
-            &Color::new(0.9, 0.9, 0.9),
+    let ground_material : Arc<Lambertian> = Arc::new(
+            Lambertian::from_color(&Color::new(0.5, 0.5, 0.5)
         )
     );
     scene.add(
@@ -100,7 +97,7 @@ fn bouncing_spheres() -> (HittableList, Camera) {
                 Sphere::new_stationary(
                 &Point3::new(0.0,-1000.0,0.0), 
                 1000.0, 
-                Arc::new(Lambertian::from_texture(ground_texture))
+                ground_material
             )
         )
     );
@@ -176,17 +173,117 @@ fn bouncing_spheres() -> (HittableList, Camera) {
     (scene, cam)
 }
 
+#[allow(dead_code)]
+fn checkered_spheres() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let ground_texture : Arc<Checker> = Arc::new(
+        Checker::from_color(
+            0.32, 
+            &Color::new(0.2, 0.3, 0.1),
+            &Color::new(0.9, 0.9, 0.9),
+        )
+    );
+    scene.add(
+        Arc::new(
+                Sphere::new_stationary(
+                &Point3::new(0.0,-10.0,0.0), 
+                10.0, 
+                Arc::new(Lambertian::from_texture(ground_texture.clone()))
+            )
+        )
+    );
+    scene.add(
+        Arc::new(
+                Sphere::new_stationary(
+                &Point3::new(0.0,10.0,0.0), 
+                10.0, 
+                Arc::new(Lambertian::from_texture(ground_texture.clone()))
+            )
+        )
+    );
+
+    // Camera
+    let aspect_ratio: f64       = 16.0 / 9.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+
+    let vertical_fov: f64       = 20.0;
+    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, max_depth, 
+        vertical_fov, lookfrom, lookat, vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+fn earth() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let earth_filepath: &Path = Path::new("earthmap.png");
+    let earth_texture : Arc<Image> = Arc::new(
+        Image::read_image(earth_filepath).unwrap()
+    );
+    let earth_surface : Arc<Lambertian> = Arc::new(
+        Lambertian::from_texture(earth_texture)
+    );
+
+    scene.add(
+        Arc::new(
+                Sphere::new_stationary(
+                &Point3::new(0.0,0.0,0.0), 
+                2.0, 
+                earth_surface
+            )
+        )
+    );
+
+    // Camera
+    let aspect_ratio: f64       = 16.0 / 9.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+
+    let vertical_fov: f64       = 20.0;
+    let lookfrom: Point3        = Point3::new(0.0, 0.0, 12.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, max_depth, 
+        vertical_fov, lookfrom, lookat, vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
 fn main() {
     dotenv().ok();
     env_logger::init();
-    
+
     let now: Instant = Instant::now();
 
     // Output
     let output_filepath: &Path = Path::new("test.ppm");
 
     // World + Camera
-    let (mut scene, cam) = bouncing_spheres();
+    let (mut scene, cam) = earth();
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
