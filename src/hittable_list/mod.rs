@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::aabb::AABB;
 use super::color::Color;
@@ -10,7 +10,7 @@ use super::vec3::{Point3, Vec3};
 
 #[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
     bounding_box: AABB
 }
 
@@ -22,7 +22,7 @@ impl HittableList {
         }
     }
 
-    pub fn from_object(object: Rc<dyn Hittable>) -> HittableList {
+    pub fn from_object(object: Arc<dyn Hittable>) -> HittableList {
         let mut list = HittableList::new();
         list.add(object);
         list
@@ -32,7 +32,7 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+    pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.bounding_box = AABB::from_bounding_box(&self.bounding_box, object.bounding_box());
         self.objects.push(object);
     }
@@ -44,7 +44,7 @@ impl Hittable for HittableList {
         let mut temp_rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
-            mat: Rc::new(Lambertian::new(Color::ZERO)),
+            mat: Arc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };

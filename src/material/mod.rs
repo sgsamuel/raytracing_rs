@@ -6,7 +6,7 @@ use super::ray::Ray;
 use super::utilities;
 use super::vec3::Vec3;
 
-pub trait Material: fmt::Display {
+pub trait Material: Send + Sync + fmt::Display {
     fn scatter(
         &self, _ray_in: &Ray, _rec: &HitRecord, _attenuation: &mut Color, _scattered: &mut Ray
     ) -> bool {

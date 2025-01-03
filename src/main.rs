@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use dotenv::dotenv;
 use env_logger;
@@ -41,21 +41,22 @@ impl Config {
     }
 }
 
+#[allow(dead_code)]
 fn simple_spheres() -> (HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
-    let material_ground: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
-    let material_center: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left: Rc<Dielectric>   = Rc::new(Dielectric::new(1.5));
-    let material_bubble: Rc<Dielectric> = Rc::new(Dielectric::new(1.0 / 1.5));
-    let material_right: Rc<Metal>       = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.2));
+    let material_ground: Arc<Lambertian> = Arc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
+    let material_center: Arc<Lambertian> = Arc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
+    let material_left: Arc<Dielectric>   = Arc::new(Dielectric::new(1.5));
+    let material_bubble: Arc<Dielectric> = Arc::new(Dielectric::new(1.0 / 1.5));
+    let material_right: Arc<Metal>       = Arc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.2));
 
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-100.5,-1.0), 100.0, material_ground)));
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,0.0,-1.2), 0.5, material_center)));
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.5, material_left)));
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(1.0,0.0,-1.0), 0.5, material_right)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(0.0,-100.5,-1.0), 100.0, material_ground)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(0.0,0.0,-1.2), 0.5, material_center)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.5, material_left)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(1.0,0.0,-1.0), 0.5, material_right)));
 
 
     // Camera
@@ -81,12 +82,13 @@ fn simple_spheres() -> (HittableList, Camera) {
     (scene, cam)
 }
 
+#[allow(dead_code)]
 fn bouncing_spheres() -> (HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
-    let ground_material : Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    scene.add(Rc::new(Sphere::new_stationary(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
+    let ground_material : Arc<Lambertian> = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    scene.add(Arc::new(Sphere::new_stationary(Point3::new(0.0,-1000.0,0.0), 1000.0, ground_material)));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -98,41 +100,41 @@ fn bouncing_spheres() -> (HittableList, Camera) {
             );
 
             if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let sphere_material: Rc<dyn Material>;
+                let sphere_material: Arc<dyn Material>;
 
                 if choose_mat < 0.8 {
                     // Lambertian
                     let albedo: Vec3 = Color::random() * Color::random();
-                    sphere_material = Rc::new(Lambertian::new(albedo));
+                    sphere_material = Arc::new(Lambertian::new(albedo));
                     let center2: Point3 = center + Vec3::new(0.0, utilities::random_f64_range(0.0, 0.5), 0.0);
-                    scene.add(Rc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
+                    scene.add(Arc::new(Sphere::new_moving(center, center2, 0.2, sphere_material)));
                 } 
                 else if choose_mat < 0.95 {
                     // Metal
                     let albedo: Color = Color::random_range(0.5, 1.0);
                     let fuzz: f64 = utilities::random_f64_range(0.0, 0.5);
-                    sphere_material = Rc::new(Metal::new(albedo, fuzz));
-                    scene.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
+                    sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    scene.add(Arc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 } 
                 else {
                     // Dielectric
-                    sphere_material = Rc::new(Dielectric::new(1.5));
-                    scene.add(Rc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
+                    sphere_material = Arc::new(Dielectric::new(1.5));
+                    scene.add(Arc::new(Sphere::new_stationary(center, 0.2, sphere_material)));
                 }
             }
         }
     }
 
-    let dielectric_material: Rc<Dielectric> = Rc::new(Dielectric::new(1.5));
-    scene.add(Rc::new(Sphere::new_stationary(
+    let dielectric_material: Arc<Dielectric> = Arc::new(Dielectric::new(1.5));
+    scene.add(Arc::new(Sphere::new_stationary(
         Point3::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
 
-    let lambertian_material: Rc<Lambertian> = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
-    scene.add(Rc::new(Sphere::new_stationary(
+    let lambertian_material: Arc<Lambertian> = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    scene.add(Arc::new(Sphere::new_stationary(
         Point3::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
 
-    let metal_material: Rc<Metal> = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
-    scene.add(Rc::new(Sphere::new_stationary(
+    let metal_material: Arc<Metal> = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.0));
+    scene.add(Arc::new(Sphere::new_stationary(
         Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
 
@@ -169,7 +171,7 @@ fn main() {
 
     // World + Camera
     let (mut scene, cam) = bouncing_spheres();
-    let bvh_scene: Rc<BVHNode> = Rc::new(BVHNode::from_hittable_list(&mut scene));
+    let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
     cam.render(&world, output_filepath);

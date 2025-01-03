@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use super::aabb::AABB;
 use super::interval::Interval;
@@ -10,7 +10,7 @@ use super::vec3::{Point3, Vec3};
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
     pub t: f64,
     pub front_face: bool,
 }
@@ -27,7 +27,7 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable : Send + Sync {
     fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
 
     fn bounding_box(&self) -> &AABB;

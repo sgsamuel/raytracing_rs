@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::fmt::{Display, Formatter};
 
 use super::aabb::AABB;
@@ -11,8 +11,8 @@ use super::vec3::Axis;
 
 #[derive(Clone)]
 pub struct BVHNode {
-    left: Rc<dyn Hittable>,
-    right: Rc<dyn Hittable>,
+    left: Arc<dyn Hittable>,
+    right: Arc<dyn Hittable>,
     bounding_box: AABB
 }
 
@@ -23,7 +23,7 @@ impl Display for BVHNode {
 }
 
 impl BVHNode {
-    pub fn from_slice(objects: &mut [Rc<dyn Hittable>]) -> Self {
+    pub fn from_slice(objects: &mut [Arc<dyn Hittable>]) -> Self {
         let mut bounding_box: AABB = AABB::EMPTY;
         for object in &mut *objects {
             bounding_box = AABB::from_bounding_box(&bounding_box, object.bounding_box());
@@ -31,15 +31,21 @@ impl BVHNode {
 
         let object_span: usize = objects.len();
 
-        let left: Rc<dyn Hittable>;
-        let right: Rc<dyn Hittable>;
+        let left: Arc<dyn Hittable>;
+        let right: Arc<dyn Hittable>;
         if object_span == 1 {
             left = objects[0].clone();
             right = objects[0].clone();
         } 
         else if object_span == 2 {
-            left = objects[0].clone();
-            right = objects[1].clone();
+            if BVHNode::box_compare(&objects[0], &objects[1], bounding_box.longest_axis()) == Ordering::Less {
+                left = objects[0].clone();
+                right = objects[1].clone();
+            } 
+            else {
+                left = objects[1].clone();
+                right = objects[0].clone();  
+            }
         } 
         else {
             let mid: usize = object_span / 2;
@@ -50,8 +56,8 @@ impl BVHNode {
                 }
             );
 
-            left = Rc::new(BVHNode::from_slice(&mut objects[..mid]));
-            right = Rc::new(BVHNode::from_slice(&mut objects[mid..]));
+            left = Arc::new(BVHNode::from_slice(&mut objects[..mid]));
+            right = Arc::new(BVHNode::from_slice(&mut objects[mid..]));
         }
 
         let bounding_box: AABB = AABB::from_bounding_box(left.bounding_box(), right.bounding_box());
@@ -64,7 +70,7 @@ impl BVHNode {
         Self::from_slice(&mut list.objects)
     }
 
-    fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: Axis) -> Ordering {
+    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: Axis) -> Ordering {
         let a_axis_interval: Interval = a.bounding_box().axis_interval(axis);
         let b_axis_interval: Interval = b.bounding_box().axis_interval(axis);
         

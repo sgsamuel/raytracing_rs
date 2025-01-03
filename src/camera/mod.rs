@@ -2,8 +2,9 @@ use std::cmp::max;
 use std::io::{BufWriter, Write};
 use std::fs::File;
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::Arc;
 use log::info;
+use rayon::prelude::*;
 
 use super::color::{Color, write_color};
 use super::hittable::{Hittable, HitRecord};
@@ -92,26 +93,45 @@ impl Camera {
     }
 
     pub fn render(&self, world: &HittableList, output_filepath: &Path) {
-        let file = File::create(output_filepath).unwrap(); 
-        let mut writer = BufWriter::new(file);
+        let file: File = File::create(output_filepath).unwrap(); 
+        let mut writer: BufWriter<File> = BufWriter::new(file);
 
+        info!("Generating image");
         writeln!(writer, "P3").unwrap();
         writeln!(writer, "{} {}", self.image_width, self.image_height).unwrap();
         writeln!(writer, "255").unwrap();
     
-        for j in 0..self.image_height {
-            info!("Scanlines remaining: {}", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut pixel_color: Color = Color::ZERO;
-                for _ in 0..self.samples_per_pixel {
-                    let ray: Ray = self.get_ray(i, j);
-                    pixel_color += self.ray_color(&ray, self.max_depth, world);
-                }
-
-                write_color(self.pixel_samples_scale * pixel_color, &mut writer);
+        let pixels = (0..self.image_height).into_par_iter().map(
+            |j: u32| {
+                info!("Scanline: {}", j);
+                (0..self.image_width).into_par_iter().map(
+                    |i: u32| {
+                        let mut pixel_color: Color = Color::ZERO;
+                        for _ in 0..self.samples_per_pixel {
+                            let ray: Ray = self.get_ray(i, j);
+                            pixel_color += self.ray_color(&ray, self.max_depth, world);
+                        }
+        
+                        write_color(self.pixel_samples_scale * pixel_color)
+                    }
+                ).collect::<Vec<String>>().join("")
             }
-        }
+        ).collect::<Vec<String>>().join("");
+        
+        // for j in 0..self.image_height {
+        //     info!("Scanlines remaining: {}", self.image_height - j);
+        //     for i in 0..self.image_width {
+        //         let mut pixel_color: Color = Color::ZERO;
+        //         for _ in 0..self.samples_per_pixel {
+        //             let ray: Ray = self.get_ray(i, j);
+        //             pixel_color += self.ray_color(&ray, self.max_depth, world);
+        //         }
 
+        //         write_color(self.pixel_samples_scale * pixel_color);
+        //     }
+        // }
+
+        writeln!(writer, "{}", pixels).unwrap();
         writer.flush().unwrap();
     }
 
@@ -147,7 +167,7 @@ impl Camera {
         let mut rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
-            mat: Rc::new(Lambertian::new(Color::ZERO)),
+            mat: Arc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };
