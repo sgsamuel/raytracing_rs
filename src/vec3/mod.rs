@@ -117,7 +117,7 @@ impl Vec3 {
     #[inline]
     pub fn random_unit_vector() -> Vec3 {
         loop {
-            let p: Vec3 = Vec3::random_range(-1.0, 1.0);
+            let p: Vec3 = Self::random_range(-1.0, 1.0);
             let lensq: f64 = p.length_squared();
             if f64::EPSILON < lensq && lensq <= 1.0 {
                 return p / lensq.sqrt();
@@ -141,8 +141,8 @@ impl Vec3 {
 
     #[inline]
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
-        let on_unit_sphere = Vec3::random_unit_vector();
-        if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+        let on_unit_sphere = Self::random_unit_vector();
+        if Self::dot(&on_unit_sphere, normal) > 0.0 {
             return on_unit_sphere;
         }
         -on_unit_sphere
@@ -150,12 +150,12 @@ impl Vec3 {
 
     #[inline]
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-        v - 2.0 * Vec3::dot(v, n) * n
+        v - 2.0 * Self::dot(v, n) * n
     }
 
     #[inline]
     pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-        let cos_theta: f64 = Vec3::dot(&-uv, n).min(1.0);
+        let cos_theta: f64 = Self::dot(&-uv, n).min(1.0);
         let r_out_perp: Vec3 =  etai_over_etat * (uv + cos_theta*n);
         let r_out_parallel: Vec3 = -((1.0 - r_out_perp.length_squared()).abs().sqrt()) * n;
         r_out_perp + r_out_parallel
@@ -355,6 +355,8 @@ impl_float_op_assign!(Vec3 DivAssign div_assign /);
 
 #[cfg(test)]
 mod tests {
+    use crate::vec3::*;
+
     #[test]
     fn component() {
         let v: Vec3 = Vec3::new(3.0, 2.0, 1.0);

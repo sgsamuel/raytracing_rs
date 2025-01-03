@@ -38,7 +38,7 @@ impl BVHNode {
             right = objects[0].clone();
         } 
         else if object_span == 2 {
-            if BVHNode::box_compare(&objects[0], &objects[1], bounding_box.longest_axis()) == Ordering::Less {
+            if Self::box_compare(&objects[0], &objects[1], bounding_box.longest_axis()) == Ordering::Less {
                 left = objects[0].clone();
                 right = objects[1].clone();
             } 
@@ -52,7 +52,7 @@ impl BVHNode {
             let obj_slice = &mut objects[..];   
             obj_slice.select_nth_unstable_by(mid, 
                 |a, b| {
-                    BVHNode::box_compare(a, b, bounding_box.longest_axis())
+                    Self::box_compare(a, b, bounding_box.longest_axis())
                 }
             );
 
@@ -61,9 +61,7 @@ impl BVHNode {
         }
 
         let bounding_box: AABB = AABB::from_bounding_box(left.bounding_box(), right.bounding_box());
-
-        let obj: BVHNode = Self { left, right, bounding_box };
-        obj
+        Self { left, right, bounding_box }
     }
 
     pub fn from_hittable_list(list: &mut HittableList) -> Self {

@@ -39,15 +39,16 @@ impl Perlin {
     }
 
     pub fn noise(&self, point: &Point3) -> f64 {
-        let u: f64 = point.component(Axis::X) - point.component(Axis::X).floor() as f64;
-        let v: f64 = point.component(Axis::Y) - point.component(Axis::Y).floor() as f64;
-        let w: f64 = point.component(Axis::Z) - point.component(Axis::Z) .floor() as f64;
+        let u: f64 = point.component(Axis::X) - point.component(Axis::X).floor();
+        let v: f64 = point.component(Axis::Y) - point.component(Axis::Y).floor();
+        let w: f64 = point.component(Axis::Z) - point.component(Axis::Z) .floor();
 
         let i: isize = point.component(Axis::X).floor() as isize;
         let j: isize = point.component(Axis::Y).floor() as isize;
         let k: isize = point.component(Axis::Z).floor() as isize;
         let mut c: [[[Vec3; 2]; 2]; 2] = Default::default();
 
+        #[allow(clippy::needless_range_loop)]
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
@@ -55,7 +56,7 @@ impl Perlin {
                     let yi: usize = ((j + dj as isize) & (self.point_count - 1) as isize) as usize;
                     let zi: usize = ((k + dk as isize) & (self.point_count - 1) as isize) as usize;
                     let index: usize = self.perm_x[xi] ^ self.perm_y[yi] ^ self.perm_z[zi];
-                    c[di][dj][dk] = self.random_vecs[index].clone();
+                    c[di][dj][dk] = self.random_vecs[index];
                 }
             }
         }
@@ -66,7 +67,7 @@ impl Perlin {
     pub fn turbulence(&self, point: &Point3, depth: u32) -> f64 {
         let mut accum: f64 = 0.0;
         let mut weight: f64 = 1.0;
-        let mut temp_p = point.clone();
+        let mut temp_p = *point;
 
         for _ in 0..depth {
             accum += weight * self.noise(&temp_p);
@@ -74,7 +75,7 @@ impl Perlin {
             temp_p *= 2.0;
         }
 
-        return accum.abs();
+        accum.abs()
     }
 
     fn trilinear_interp(c: &[[[Vec3; 2]; 2]; 2], uvw: (f64, f64, f64)) -> f64 {
@@ -82,6 +83,8 @@ impl Perlin {
         let vv = uvw.1 * uvw.1 * (3.0 - 2.0 * uvw.1);
         let ww = uvw.2 * uvw.2 * (3.0 - 2.0 * uvw.2);
         let mut accum: f64 = 0.0;
+
+        #[allow(clippy::needless_range_loop)]
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {

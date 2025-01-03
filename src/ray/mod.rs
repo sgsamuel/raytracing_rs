@@ -55,6 +55,9 @@ impl Ray {
 
 #[cfg(test)]
 mod tests {
+    use crate::ray::*;
+    use crate::vec3::*;
+
     #[test]
     fn origin_direction_time() {
         let orig: Point3 = Point3::new(3.0, 2.0, 1.0);

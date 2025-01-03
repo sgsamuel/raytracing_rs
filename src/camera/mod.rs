@@ -109,7 +109,7 @@ impl Camera {
                         let mut pixel_color: Color = Color::ZERO;
                         for _ in 0..self.samples_per_pixel {
                             let ray: Ray = self.get_ray(i, j);
-                            pixel_color += Camera::ray_color(&ray, self.max_depth, world);
+                            pixel_color += Self::ray_color(&ray, self.max_depth, world);
                         }
         
                         write_color(self.pixel_samples_scale * pixel_color)
@@ -157,7 +157,7 @@ impl Camera {
         if let Some(rec) = world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
             match rec.mat.scatter(ray, &rec) { 
                 Some((attenuation, scattered)) => {
-                    return attenuation * Camera::ray_color(&scattered, depth-1, world)
+                    return attenuation * Self::ray_color(&scattered, depth-1, world)
                 },
                 None => {
                     return Color::ZERO;
