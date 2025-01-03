@@ -2,12 +2,12 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 use std::fmt::{Display, Formatter};
 
-use super::aabb::AABB;
-use super::hittable::{HitRecord, Hittable};
-use super::hittable_list::HittableList;
-use super::interval::Interval;
-use super::ray::Ray;
-use super::vec3::Axis;
+use crate::aabb::AABB;
+use crate::hittable::{HitRecord, Hittable};
+use crate::hittable_list::HittableList;
+use crate::interval::Interval;
+use crate::ray::Ray;
+use crate::vec3::Axis;
 
 #[derive(Clone)]
 pub struct BVHNode {

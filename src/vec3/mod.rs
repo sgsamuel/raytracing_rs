@@ -6,7 +6,7 @@ use rand::{
     Rng,
 };
 
-use super::utilities;
+use crate::utilities;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Axis {
@@ -349,7 +349,7 @@ impl_float_op_assign!(Vec3 DivAssign div_assign /);
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::*;
 
     #[test]
     fn component() {

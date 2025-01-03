@@ -1,6 +1,6 @@
-use super::interval::Interval;
+use crate::interval::Interval;
 
-pub type Color = super::vec3::Vec3;
+pub type Color = crate::vec3::Vec3;
 
 #[inline]
 pub fn linear_to_gamma(linear_component: f64) -> f64 {

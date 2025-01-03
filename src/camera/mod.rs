@@ -6,13 +6,13 @@ use std::path::Path;
 use log::info;
 use rayon::prelude::*;
 
-use super::color::{Color, write_color};
-use super::hittable::Hittable;
-use super::hittable_list::HittableList;
-use super::interval::Interval;
-use super::utilities;
-use super::vec3::{Axis, Point3, Vec3};
-use super::ray::Ray;
+use crate::color::{Color, write_color};
+use crate::hittable::Hittable;
+use crate::hittable_list::HittableList;
+use crate::interval::Interval;
+use crate::utilities;
+use crate::vec3::{Axis, Point3, Vec3};
+use crate::ray::Ray;
 
 pub struct Camera {
     pub aspect_ratio: f64,          // Ratio of image width over height

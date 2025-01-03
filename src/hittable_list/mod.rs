@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use super::aabb::AABB;
-use super::color::Color;
-use super::hittable::{HitRecord, Hittable};
-use super::interval::Interval;
-use super::material::Lambertian;
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use crate::aabb::AABB;
+use crate::color::Color;
+use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
+use crate::material::Lambertian;
+use crate::ray::Ray;
+use crate::vec3::{Point3, Vec3};
 
 #[derive(Clone)]
 pub struct HittableList {

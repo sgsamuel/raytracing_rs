@@ -2,12 +2,12 @@ use core::f64;
 use std::fmt;
 use std::sync::Arc;
 
-use super::aabb::AABB;
-use super::hittable::{HitRecord, Hittable};
-use super::interval::Interval;
-use super::material::Material;
-use super::ray::Ray;
-use super::vec3::{Axis, Point3, Vec3};
+use crate::aabb::AABB;
+use crate::hittable::{HitRecord, Hittable};
+use crate::interval::Interval;
+use crate::material::Material;
+use crate::ray::Ray;
+use crate::vec3::{Axis, Point3, Vec3};
 
 #[derive(Clone)]
 pub struct Sphere {

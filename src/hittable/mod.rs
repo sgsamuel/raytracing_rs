@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
-use super::aabb::AABB;
-use super::interval::Interval;
-use super::material::Material;
-use super::ray::Ray;
-use super::vec3::{Point3, Vec3};
+use crate::aabb::AABB;
+use crate::interval::Interval;
+use crate::material::Material;
+use crate::ray::Ray;
+use crate::vec3::{Point3, Vec3};
 
 #[derive(Clone)]
 pub struct HitRecord {

@@ -1,12 +1,12 @@
 use std::fmt;
 use std::sync::Arc;
 
-use super::color::Color;
-use super::hittable::HitRecord;
-use super::ray::Ray;
-use super::texture::{Texture, Solid};
-use super::utilities;
-use super::vec3::Vec3;
+use crate::color::Color;
+use crate::hittable::HitRecord;
+use crate::ray::Ray;
+use crate::texture::{Texture, Solid};
+use crate::utilities;
+use crate::vec3::Vec3;
 
 pub trait Material: Send + Sync + fmt::Display {
     fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord) -> Option<(Color, Ray)> {

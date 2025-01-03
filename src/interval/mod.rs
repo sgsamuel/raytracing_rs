@@ -66,7 +66,7 @@ impl Interval {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::*;
 
     #[test]
     fn size() {

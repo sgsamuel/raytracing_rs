@@ -4,9 +4,10 @@ use std::sync::Arc;
 
 use image::{DynamicImage, GenericImageView};
 
-use super::color::Color;
-use super::interval::Interval;
-use super::vec3::{Axis, Point3};
+use crate::color::Color;
+use crate::interval::Interval;
+use crate::perlin::Perlin;
+use crate::vec3::{Axis, Point3};
 
 pub trait Texture: Send + Sync + fmt::Display {
     fn value(&self, uv: (f64, f64), point: &Point3) -> Color;
@@ -117,5 +118,28 @@ impl Texture for Image {
             color_scale * f64::from(pixel[1]), 
             color_scale * f64::from(pixel[2])
         )
+    }
+}
+
+
+pub struct Noise {
+    noise: Perlin
+}
+
+impl fmt::Display for Noise {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Noise Texture")
+    }
+}
+
+impl Noise {
+    pub fn new(point_count: usize) -> Self {
+        Self { noise: Perlin::new(point_count) }
+    }
+}
+
+impl Texture for Noise {
+    fn value(&self, _uv: (f64, f64), point: &Point3) -> Color {
+        Color::ONE * self.noise.noise(point)
     }
 }
