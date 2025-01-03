@@ -168,6 +168,6 @@ impl Camera {
         let unit_direction: Vec3 = Vec3::unit_vector(ray.direction());
         let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
         
-        (1.0 - a)*Color::ONE + a*Color::new(0.5, 0.7, 1.0)
+        (1.0 - a) * Color::ONE + a * Color::new(0.5, 0.7, 1.0)
     }
 }

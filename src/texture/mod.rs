@@ -6,7 +6,7 @@ use image::{DynamicImage, GenericImageView};
 
 use crate::color::Color;
 use crate::interval::Interval;
-use crate::perlin::Perlin;
+use crate::perlin::{Perlin, PerlinTexture};
 use crate::vec3::{Axis, Point3};
 
 pub trait Texture: Send + Sync + fmt::Display {
@@ -123,7 +123,9 @@ impl Texture for Image {
 
 
 pub struct Noise {
-    noise: Perlin
+    noise: Perlin,
+    perlin_texture: PerlinTexture,
+    scale: f64
 }
 
 impl fmt::Display for Noise {
@@ -133,13 +135,25 @@ impl fmt::Display for Noise {
 }
 
 impl Noise {
-    pub fn new(point_count: usize) -> Self {
-        Self { noise: Perlin::new(point_count) }
+    pub fn new(point_count: usize, perlin_texture: PerlinTexture, scale: f64) -> Self {
+        Self { noise: Perlin::new(point_count), perlin_texture, scale }
     }
 }
 
 impl Texture for Noise {
     fn value(&self, _uv: (f64, f64), point: &Point3) -> Color {
-        Color::ONE * self.noise.noise(point)
+        let noise_factor: f64 = match self.perlin_texture {
+            PerlinTexture::Normal => {
+                0.5 * (1.0 + self.noise.noise(&(self.scale * point)))
+            },
+            PerlinTexture::Turbulence(depth) => {
+                self.noise.turbulence(point, depth)
+            },
+            PerlinTexture::Marble(depth) => {
+                let noise = self.noise.turbulence(point, depth);
+                0.5 * (1.0 + f64::sin(self.scale.mul_add(point.component(Axis::Z), 10.0 * noise)))
+            }
+        };
+        noise_factor * Color::ONE
     }
 }

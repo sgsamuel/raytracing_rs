@@ -14,6 +14,12 @@ impl fmt::Display for Ray {
     }
 }
 
+impl Default for Ray {
+    fn default() -> Self {
+        Ray::ZERO
+    }
+}
+
 impl Ray {
     pub const ZERO: Ray = Ray {
         orig: Point3::ZERO,
@@ -49,8 +55,6 @@ impl Ray {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
-
     #[test]
     fn origin_direction_time() {
         let orig: Point3 = Point3::new(3.0, 2.0, 1.0);

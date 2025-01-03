@@ -90,7 +90,7 @@ impl Hittable for Sphere {
 
         let ray_root: Vec3 = ray.at(root);
         let outward_normal: Vec3 = (ray_root - current_center) / self.radius;
-        let uv: (f64, f64) = Sphere::get_sphere_uv(&outward_normal);
+        let uv: (f64, f64) = Self::get_sphere_uv(&outward_normal);
         let rec: HitRecord = HitRecord::new(
             ray_root, 
             self.mat.clone(), 

@@ -5,6 +5,7 @@ use crate::camera::Camera;
 use crate::color::Color;
 use crate::hittable_list::HittableList;
 use crate::material::{Dielectric, Lambertian, Material, Metal};
+use crate::perlin::PerlinTexture;
 use crate::sphere::Sphere;
 use crate::texture::{Checker, Image, Noise};
 use crate::utilities;
@@ -246,7 +247,7 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
-    let perlin_texture : Arc<Noise> = Arc::new(Noise::new(256));
+    let perlin_texture : Arc<Noise> = Arc::new(Noise::new(256, PerlinTexture::Marble(7), 4.0));
     scene.add(
         Arc::new(
                 Sphere::new_stationary(

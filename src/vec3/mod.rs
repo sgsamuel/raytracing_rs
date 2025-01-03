@@ -34,9 +34,9 @@ impl Distribution<Axis> for Standard {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vec3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
+    x: f64,
+    y: f64,
+    z: f64,
 }
 
 pub type Point3 = Vec3;
@@ -44,6 +44,12 @@ pub type Point3 = Vec3;
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {}", self.x, self.y, self.z)
+    }
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Vec3::ZERO
     }
 }
 
@@ -349,8 +355,6 @@ impl_float_op_assign!(Vec3 DivAssign div_assign /);
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
-
     #[test]
     fn component() {
         let v: Vec3 = Vec3::new(3.0, 2.0, 1.0);
