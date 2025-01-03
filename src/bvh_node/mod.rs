@@ -92,11 +92,8 @@ impl Hittable for BVHNode {
 
         let mut right_ray_max: f64 = ray_t.max;
         let hit_left: Option<HitRecord> = self.left.hit(ray, ray_t);
-        match hit_left {
-            Some(ref rec) => {
-                right_ray_max = rec.t
-            },
-            None => ()
+        if let Some(ref rec) = hit_left {
+            right_ray_max = rec.t
         }
         let hit_right: Option<HitRecord>  = self.right.hit(ray, &Interval::new(ray_t.min, right_ray_max));
         

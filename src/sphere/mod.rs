@@ -28,7 +28,7 @@ impl Sphere {
     }
 
     pub fn new_moving(center1: &Point3, center2: &Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
-        let center: Ray = Ray::new(&center1, &(center2 - center1));
+        let center: Ray = Ray::new(center1, &(center2 - center1));
         let rvec: Vec3 = radius * Vec3::ONE;
         let box1: AABB = AABB::from_point(&(center.at(0.0) - rvec), &(center.at(0.0) + rvec));
         let box2: AABB = AABB::from_point(&(center.at(1.0) - rvec), &(center.at(1.0) + rvec));
@@ -54,7 +54,7 @@ impl Hittable for Sphere {
         let oc: Vec3 = current_center - ray.origin();
 
         let a: f64 = ray.direction().length_squared();
-        let h: f64 = Vec3::dot(&ray.direction(), &oc);
+        let h: f64 = Vec3::dot(ray.direction(), &oc);
         let c: f64 = oc.length_squared() - self.radius * self.radius;
 
         let discriminant: f64 = h * h - a * c;

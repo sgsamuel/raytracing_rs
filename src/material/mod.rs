@@ -103,26 +103,24 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let ri: f64;
-        if rec.front_face {
-            ri = 1.0 / self.refractive_index;
+        let ri: f64 = if rec.front_face {
+            1.0 / self.refractive_index
         } 
         else {
-            ri = self.refractive_index;
-        }
+            self.refractive_index
+        };
 
         let unit_direction: Vec3 = Vec3::unit_vector(ray_in.direction());
         let cos_theta: f64 = Vec3::dot(&-unit_direction, &rec.normal).min(1.0);
         let sin_theta: f64 = (1.0 - cos_theta*cos_theta).sqrt();
 
         let cannot_refract: bool = ri * sin_theta > 1.0;
-        let direction: Vec3;
-        if cannot_refract || Dielectric::reflectance(cos_theta, ri) > utilities::random() {
-            direction = Vec3::reflect(&unit_direction, &rec.normal);
+        let direction: Vec3 = if cannot_refract || Dielectric::reflectance(cos_theta, ri) > utilities::random() {
+            Vec3::reflect(&unit_direction, &rec.normal)
         } 
         else {            
-            direction = Vec3::refract(&unit_direction, &rec.normal, ri);
-        }
+            Vec3::refract(&unit_direction, &rec.normal, ri)
+        };
 
         let attenuation: Color = Color::ONE;
         let scattered: Ray = Ray::with_time(&rec.p, &direction, ray_in.time());

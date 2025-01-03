@@ -94,7 +94,7 @@ impl Vec3 {
     pub fn near_zero(&self) -> bool {
         // Return true if the vector is close to zero in all dimensions.
         let eps: f64 = 1e-8;
-        return (self.x.abs() < eps) && (self.y.abs() < eps) && (self.z.abs() < eps);
+        (self.x.abs() < eps) && (self.y.abs() < eps) && (self.z.abs() < eps)
     }
 
     #[inline]
@@ -156,11 +156,11 @@ impl Vec3 {
 
     #[inline]
     pub fn cross(v1: &Vec3, v2: &Vec3) -> Vec3 {
-        return Vec3 {
+        Vec3 {
             x: v1.y * v2.z - v1.z * v2.y,
             y: v1.z * v2.x - v1.x * v2.z,
             z: v1.x * v2.y - v1.y * v2.x,
-        };
+        }
     }
 }
 

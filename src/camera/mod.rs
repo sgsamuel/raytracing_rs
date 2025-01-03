@@ -38,6 +38,7 @@ pub struct Camera {
 }
 
 impl Camera {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         aspect_ratio: f64, 
         image_width: u32, 
@@ -108,7 +109,7 @@ impl Camera {
                         let mut pixel_color: Color = Color::ZERO;
                         for _ in 0..self.samples_per_pixel {
                             let ray: Ray = self.get_ray(i, j);
-                            pixel_color += self.ray_color(&ray, self.max_depth, world);
+                            pixel_color += Camera::ray_color(&ray, self.max_depth, world);
                         }
         
                         write_color(self.pixel_samples_scale * pixel_color)
@@ -129,46 +130,42 @@ impl Camera {
                             + (((i as f64) + random_offset.component(Axis::X)) * self.pixel_delta_u)
                             + (((j as f64) + random_offset.component(Axis::Y)) * self.pixel_delta_v);
 
-        let ray_origin: Point3;
-        if self.defocus_angle <= 0.0 {
-            ray_origin = self.center;
+        let ray_origin: Point3 = if self.defocus_angle <= 0.0 {
+            self.center
         }
         else {
-            ray_origin = self.defocus_disk_sample();
-        }
+            self.defocus_disk_sample()
+        };
 
         let ray_direction: Vec3 = pixel_sample - ray_origin;
         let ray_time = utilities::random();
 
-        return Ray::with_time(&ray_origin, &ray_direction, ray_time);
+        Ray::with_time(&ray_origin, &ray_direction, ray_time)
     }
 
     fn defocus_disk_sample(&self) -> Point3 {
         // Returns a random point in the camera defocus disk.
         let p: Vec3 = Vec3::random_in_unit_disk();
-        return self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v);
+        self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v)
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {        
-        if depth <= 0 {
+    fn ray_color(ray: &Ray, depth: u32, world: &HittableList) -> Color {        
+        if depth == 0 {
             return Color::ZERO;
         }
 
-        match world.hit(ray, &mut Interval::new(0.001, f64::INFINITY)) {
-            Some(rec) => {
-                match rec.mat.scatter(ray, &rec) { 
-                    Some((attenuation, scattered)) => {
-                        return attenuation * self.ray_color(&scattered, depth-1, world)
-                    },
-                    None => {
-                        return Color::ZERO;
-                    }
+        if let Some(rec) = world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
+            match rec.mat.scatter(ray, &rec) { 
+                Some((attenuation, scattered)) => {
+                    return attenuation * Camera::ray_color(&scattered, depth-1, world)
+                },
+                None => {
+                    return Color::ZERO;
                 }
-            },
-            None => ()
+            }
         }
         
-        let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());
+        let unit_direction: Vec3 = Vec3::unit_vector(ray.direction());
         let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
         
         (1.0 - a)*Color::ONE + a*Color::new(0.5, 0.7, 1.0)

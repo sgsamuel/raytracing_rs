@@ -2,7 +2,6 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use dotenv::dotenv;
-use env_logger;
 use log::info;
 
 pub mod aabb;
@@ -180,6 +179,7 @@ fn bouncing_spheres() -> (HittableList, Camera) {
 fn main() {
     dotenv().ok();
     env_logger::init();
+    
     let now: Instant = Instant::now();
 
     // Output
