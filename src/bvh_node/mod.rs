@@ -85,19 +85,22 @@ impl BVHNode {
 }
 
 impl Hittable for BVHNode {
-    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         if !self.bounding_box.hit(ray, ray_t) {
-            return false
+            return None
         }
 
-        let hit_left: bool = self.left.hit(ray, ray_t, rec);
         let mut right_ray_max: f64 = ray_t.max;
-        if hit_left {
-            right_ray_max = rec.t
+        let hit_left: Option<HitRecord> = self.left.hit(ray, ray_t);
+        match &hit_left {
+            Some(rec) => {
+                right_ray_max = rec.t
+            },
+            None => ()
         }
-        let hit_right: bool = self.right.hit(ray, &Interval::new(ray_t.min, right_ray_max), rec);
+        let hit_right: Option<HitRecord>  = self.right.hit(ray, &Interval::new(ray_t.min, right_ray_max));
         
-        hit_right || hit_left
+        hit_right.or(hit_left)
     }
 
     fn bounding_box(&self) -> &AABB {

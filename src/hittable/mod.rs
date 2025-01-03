@@ -16,19 +16,22 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn set_face_normal(&mut self, ray: &Ray, outward_normal: &Vec3) {
-        self.front_face = Vec3::dot(ray.direction(), outward_normal) < 0.0;
-        if self.front_face {
-            self.normal = *outward_normal;
+    pub fn new(p: Point3, mat: Arc<dyn Material>, t: f64, ray: &Ray, outward_normal: &Vec3) -> Self {
+        let front_face: bool = Vec3::dot(ray.direction(), outward_normal) < 0.0;
+        let normal: Vec3;
+        if front_face {
+            normal = *outward_normal;
         } 
         else {
-            self.normal = -*outward_normal;
+            normal = -*outward_normal;
         }
+
+        Self { p, normal, mat, t, front_face }
     }
 }
 
 pub trait Hittable : Send + Sync {
-    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool;
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 
     fn bounding_box(&self) -> &AABB;
 }

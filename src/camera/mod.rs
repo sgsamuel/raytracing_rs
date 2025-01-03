@@ -2,15 +2,14 @@ use std::cmp::max;
 use std::io::{BufWriter, Write};
 use std::fs::File;
 use std::path::Path;
-use std::sync::Arc;
+
 use log::info;
 use rayon::prelude::*;
 
 use super::color::{Color, write_color};
-use super::hittable::{Hittable, HitRecord};
+use super::hittable::Hittable;
 use super::hittable_list::HittableList;
 use super::interval::Interval;
-use super::material::Lambertian;
 use super::utilities;
 use super::vec3::{Axis, Point3, Vec3};
 use super::ray::Ray;
@@ -117,19 +116,6 @@ impl Camera {
                 ).collect::<Vec<String>>().join("")
             }
         ).collect::<Vec<String>>().join("");
-        
-        // for j in 0..self.image_height {
-        //     info!("Scanlines remaining: {}", self.image_height - j);
-        //     for i in 0..self.image_width {
-        //         let mut pixel_color: Color = Color::ZERO;
-        //         for _ in 0..self.samples_per_pixel {
-        //             let ray: Ray = self.get_ray(i, j);
-        //             pixel_color += self.ray_color(&ray, self.max_depth, world);
-        //         }
-
-        //         write_color(self.pixel_samples_scale * pixel_color);
-        //     }
-        // }
 
         writeln!(writer, "{}", pixels).unwrap();
         writer.flush().unwrap();
@@ -163,27 +149,22 @@ impl Camera {
         return self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v);
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {
-        let mut rec: HitRecord = HitRecord {
-            p: Point3::ZERO,
-            normal: Vec3::ZERO,
-            mat: Arc::new(Lambertian::new(Color::ZERO)),
-            t: 0.0,
-            front_face: false
-        };
-        
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {        
         if depth <= 0 {
             return Color::ZERO;
         }
 
-        if world.hit(ray, &mut Interval::new(0.001, f64::INFINITY), &mut rec) {
-            let mut attenuation: Color = Color::ZERO;
-            let mut scattered: Ray = Ray::ZERO;
-            if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
-                return attenuation * self.ray_color(&scattered, depth-1, world)
-            }
-
-            return Color::ZERO;
+        match world.hit(ray, &mut Interval::new(0.001, f64::INFINITY)) {
+            Some(rec) => {
+                let mut attenuation: Color = Color::ZERO;
+                let mut scattered: Ray = Ray::ZERO;
+                if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
+                    return attenuation * self.ray_color(&scattered, depth-1, world)
+                }
+    
+                return Color::ZERO;
+            },
+            None => ()
         }
         
         let unit_direction: Vec3 = Vec3::unit_vector(&ray.direction());

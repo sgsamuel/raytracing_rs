@@ -40,27 +40,33 @@ impl HittableList {
 
 
 impl Hittable for HittableList {
-    fn hit(&self, ray: &Ray, ray_t: &Interval, rec: &mut HitRecord) -> bool {
-        let mut temp_rec: HitRecord = HitRecord {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        let mut hit_rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
             mat: Arc::new(Lambertian::new(Color::ZERO)),
             t: 0.0,
             front_face: false
         };
-
+        
         let mut hit_anything: bool = false;
         let mut closest_so_far: f64 = ray_t.max;
 
         for object in &self.objects {
-            if object.hit(ray, &mut Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
+            match object.hit(ray, &Interval::new(ray_t.min, closest_so_far)) {
+                Some(rec) => {
+                    hit_anything = true;
+                    closest_so_far = rec.t;
+                    hit_rec = rec;
+                },
+                None => ()   
             }
         }
 
-        hit_anything
+        if hit_anything {
+            return Some(hit_rec);
+        }
+        None
     }
 
     fn bounding_box(&self) -> &AABB {
