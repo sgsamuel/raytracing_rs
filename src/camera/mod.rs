@@ -140,7 +140,7 @@ impl Camera {
         let ray_direction: Vec3 = pixel_sample - ray_origin;
         let ray_time = utilities::random();
 
-        return Ray::with_time(ray_origin, ray_direction, ray_time);
+        return Ray::with_time(&ray_origin, &ray_direction, ray_time);
     }
 
     fn defocus_disk_sample(&self) -> Point3 {

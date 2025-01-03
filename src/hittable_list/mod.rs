@@ -44,11 +44,13 @@ impl Hittable for HittableList {
         let mut hit_rec: HitRecord = HitRecord {
             p: Point3::ZERO,
             normal: Vec3::ZERO,
-            mat: Arc::new(Lambertian::new(Color::ZERO)),
+            mat: Arc::new(Lambertian::from_color(&Color::ZERO)),
             t: 0.0,
+            u: 0.0,
+            v: 0.0,
             front_face: false
         };
-        
+
         let mut hit_anything: bool = false;
         let mut closest_so_far: f64 = ray_t.max;
 

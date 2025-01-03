@@ -15,12 +15,12 @@ impl Ray {
         tm: 0.0
     };
 
-    pub fn new(origin: Point3, direction: Vec3) -> Self {
-        Self { orig: origin, dir: direction, tm: 0.0}
+    pub fn new(origin: &Point3, direction: &Vec3) -> Self {
+        Self { orig: *origin, dir: *direction, tm: 0.0}
     }
 
-    pub fn with_time(origin: Point3, direction: Vec3, time: f64) -> Self {
-        Self { orig: origin, dir: direction, tm: time}
+    pub fn with_time(origin: &Point3, direction: &Vec3, time: f64) -> Self {
+        Self { orig: *origin, dir: *direction, tm: time}
     }
 
     pub fn origin(&self) -> &Point3 {
@@ -54,14 +54,14 @@ mod tests {
     fn origin_direction_time() {
         let orig: Point3 = Point3::new(3.0, 2.0, 1.0);
         let dir: Vec3 = Vec3::new(1.0, 2.0, 3.0);
-        let ray1: Ray = Ray::new(orig, dir);
+        let ray1: Ray = Ray::new(&orig, &dir);
 
         assert_eq!(ray1.origin(), &orig);
         assert_eq!(ray1.direction(), &dir);
         assert_eq!(ray1.time(), 0.0);
 
         let tm: f64 = 0.5;
-        let ray2: Ray = Ray::with_time(orig, dir, tm);
+        let ray2: Ray = Ray::with_time(&orig, &dir, tm);
         assert_eq!(ray2.origin(), &orig);
         assert_eq!(ray2.direction(), &dir);
         assert_eq!(ray2.time(), tm);
@@ -71,7 +71,7 @@ mod tests {
     fn at() {
         let orig: Point3 = Point3::new(3.0, 2.0, 1.0);
         let dir: Vec3 = Vec3::new(1.0, 2.0, 3.0);
-        let ray: Ray = Ray::new(orig, dir);
+        let ray: Ray = Ray::new(&orig, &dir);
 
         assert_eq!(ray.at(0.0), Point3::new(3.0, 2.0, 1.0));
         assert_eq!(ray.at(0.5), Point3::new(3.5, 3.0, 2.5));
