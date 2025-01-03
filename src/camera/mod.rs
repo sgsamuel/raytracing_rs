@@ -156,13 +156,14 @@ impl Camera {
 
         match world.hit(ray, &mut Interval::new(0.001, f64::INFINITY)) {
             Some(rec) => {
-                let mut attenuation: Color = Color::ZERO;
-                let mut scattered: Ray = Ray::ZERO;
-                if rec.mat.scatter(ray, &rec, &mut attenuation, &mut scattered) {
-                    return attenuation * self.ray_color(&scattered, depth-1, world)
+                match rec.mat.scatter(ray, &rec) { 
+                    Some((attenuation, scattered)) => {
+                        return attenuation * self.ray_color(&scattered, depth-1, world)
+                    },
+                    None => {
+                        return Color::ZERO;
+                    }
                 }
-    
-                return Color::ZERO;
             },
             None => ()
         }
