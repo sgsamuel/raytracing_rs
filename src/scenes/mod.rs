@@ -494,6 +494,17 @@ pub fn cornell_box() -> (HittableList, Camera) {
         ),
     ));
     
+    scene.add(Quad::new_box(
+        &Point3::new(130.0, 0.0, 65.0),
+        &Point3::new(295.0, 165.0, 230.0),
+        white.clone())
+    );
+    scene.add(Quad::new_box(
+        &Point3::new(265.0, 0.0, 295.0),
+        &Point3::new(430.0, 330.0, 460.0),
+        white.clone())
+    );
+
     // Camera
     let aspect_ratio: f64       = 1.0;
     let image_width: u32        = 600;

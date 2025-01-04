@@ -3,10 +3,11 @@ use std::sync::Arc;
 
 use crate::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
+use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Axis, Point3, Vec3};
 
 #[derive(Clone)]
 pub struct Quad {
@@ -49,6 +50,73 @@ impl Quad {
         }
     }
 
+    #[inline]
+    pub fn new_box(a: &Point3, b: &Point3, mat: Arc<dyn Material>) -> Arc<HittableList>{
+        // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+        let mut sides: HittableList = HittableList::new();
+
+        // Construct the two opposite vertices with the minimum and maximum coordinates.
+        let min: Point3 = Point3::new(
+            f64::min(a.component(Axis::X), b.component(Axis::X)),
+            f64::min(a.component(Axis::Y), b.component(Axis::Y)),
+            f64::min(a.component(Axis::Z), b.component(Axis::Z))
+        );
+        let max: Point3 = Point3::new(
+            f64::max(a.component(Axis::X), b.component(Axis::X)),
+            f64::max(a.component(Axis::Y), b.component(Axis::Y)),
+            f64::max(a.component(Axis::Z), b.component(Axis::Z))
+        );
+
+        let dx: Vec3 = Vec3::new(max.component(Axis::X) - min.component(Axis::X), 0.0, 0.0);
+        let dy: Vec3 = Vec3::new(0.0, max.component(Axis::Y) - min.component(Axis::Y), 0.0);
+        let dz: Vec3 = Vec3::new(0.0, 0.0, max.component(Axis::Z) - min.component(Axis::Z));
+
+        sides.add(Arc::new(Quad::new(
+                &Point3::new(min.component(Axis::X), min.component(Axis::Y), max.component(Axis::Z)),
+                &dx,
+                &dy,
+                mat.clone()
+            ))
+        ); // front
+        sides.add(Arc::new(Quad::new(
+                &Point3::new(max.component(Axis::X), min.component(Axis::Y), max.component(Axis::Z)),
+                &-dz,
+                &dy,
+                mat.clone()
+            ))
+        ); // right
+        sides.add(Arc::new(Quad::new(
+                &Point3::new(max.component(Axis::X), min.component(Axis::Y), min.component(Axis::Z)),
+                &-dx,
+                &dy,
+                mat.clone()
+            ))
+        ); // back
+        sides.add(Arc::new(Quad::new(
+                &Point3::new(min.component(Axis::X), min.component(Axis::Y), min.component(Axis::Z)),
+                &dz,
+                &dy,
+                mat.clone()
+            ))
+        ); // left
+        sides.add(Arc::new(Quad::new(
+            &Point3::new(min.component(Axis::X), max.component(Axis::Y), max.component(Axis::Z)),
+            &dx,
+            &-dz,
+            mat.clone()
+            ))
+        ); // top
+        sides.add(Arc::new(Quad::new(
+                &Point3::new(min.component(Axis::X), min.component(Axis::Y), min.component(Axis::Z)),
+                &dx,
+                &dz,
+                mat.clone()
+            ))
+        ); // bottom
+
+        Arc::new(sides)
+    }
+
     fn is_interior(a: f64, b: f64) -> Option<(f64, f64)> {
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
@@ -77,8 +145,8 @@ impl Hittable for Quad {
         // Determine if the hit point lies within the planar shape using its plane coordinates.
         let intersection: Vec3 = ray.at(t);
         let planar_hitpt_vector: Vec3 = intersection - self.quad_start;
-        let alpha = Vec3::dot(&self.w, &Vec3::cross(&planar_hitpt_vector, &self.v));
-        let beta = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hitpt_vector));
+        let alpha: f64 = Vec3::dot(&self.w, &Vec3::cross(&planar_hitpt_vector, &self.v));
+        let beta: f64 = Vec3::dot(&self.w, &Vec3::cross(&self.u, &planar_hitpt_vector));
 
         match Self::is_interior(alpha, beta) {
             Some(uv) => {

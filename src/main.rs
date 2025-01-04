@@ -19,6 +19,7 @@ pub mod ray;
 pub mod scenes;
 pub mod sphere;
 pub mod texture;
+pub mod transform;
 pub mod utilities;
 pub mod vec3;
 

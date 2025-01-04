@@ -1,3 +1,5 @@
+use std::ops::Add;
+
 use crate::interval::Interval;
 use crate::ray::Ray;
 use crate::vec3::{Axis, Point3, Vec3};
@@ -113,5 +115,80 @@ impl AABB {
         if self.z.size() < delta {
             self.z.expand(delta);
         }
+    }
+}
+
+impl<'v, 'bb> Add<&'v Vec3> for &'bb AABB {
+    type Output = AABB;
+
+    fn add(self, other: &'v Vec3) -> AABB {
+        AABB { 
+            x: self.x + other.component(Axis::X), 
+            y: self.y + other.component(Axis::Y), 
+            z: self.z + other.component(Axis::Z) 
+        }
+    }
+}
+
+impl Add<Vec3> for AABB {    
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: Vec3) -> AABB {
+        &self + &other
+    }
+}
+
+impl<'v> Add<&'v Vec3> for AABB {    
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: &'v Vec3) -> AABB {
+        &self + other
+    }
+}
+
+impl<'bb> Add<Vec3> for &'bb AABB {    
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: Vec3) -> AABB {
+        self + &other
+    }
+}
+
+impl<'bb, 'v> Add<&'bb AABB> for &'v Vec3 {
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: &'bb AABB) -> AABB {
+        other + self
+    }
+}
+
+impl Add<AABB> for Vec3 {
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: AABB) -> AABB {
+        &other + &self
+    }
+}
+
+impl<'bb> Add<&'bb AABB> for Vec3 {
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: &'bb AABB) -> AABB {
+        other + &self
+    }
+}
+
+impl<'v> Add<AABB> for &'v Vec3 {
+    type Output = AABB;
+
+    #[inline]
+    fn add(self, other: AABB) -> AABB {
+        &other + self
     }
 }
