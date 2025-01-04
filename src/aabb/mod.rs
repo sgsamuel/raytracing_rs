@@ -23,13 +23,15 @@ impl AABB {
     };
 
     pub fn from_interval(x: Interval, y: Interval, z: Interval) -> Self {
-        Self { x, y, z }
+        let mut aabb: Self = Self { x, y, z };
+        aabb.pad_to_minimums();
+        aabb
     }
 
     pub fn from_point(a: &Point3, b: &Point3) -> Self {
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
-        Self {
+        let mut aabb: Self = Self {
             x: Interval::new(
                 f64::min(a.component(Axis::X), b.component(Axis::X)),
                 f64::max(a.component(Axis::X), b.component(Axis::X))
@@ -42,15 +44,19 @@ impl AABB {
                 f64::min(a.component(Axis::Z), b.component(Axis::Z)),
                 f64::max(a.component(Axis::Z), b.component(Axis::Z))
             )
-        }
+        };
+        aabb.pad_to_minimums();
+        aabb
     }
 
     pub fn from_bounding_box(box1: &AABB, box2: &AABB) -> Self {
-        Self {
+        let mut aabb: Self = Self {
             x: Interval::from_interval(&box1.x, &box2.x),
             y: Interval::from_interval(&box1.y, &box2.y),
             z: Interval::from_interval(&box1.z, &box2.z)
-        }
+        };
+        aabb.pad_to_minimums();
+        aabb
     }
 
     pub fn axis_interval(&self, axis: Axis) -> Interval {
@@ -93,5 +99,19 @@ impl AABB {
             }
         }
         true
+    }
+
+    fn pad_to_minimums(&mut self) {
+        // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
+        let delta: f64 = 0.0001;
+        if self.x.size() < delta {
+            self.x.expand(delta);
+        }
+        if self.y.size() < delta {
+            self.y.expand(delta);
+        }
+        if self.z.size() < delta {
+            self.z.expand(delta);
+        }
     }
 }

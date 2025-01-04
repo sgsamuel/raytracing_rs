@@ -47,7 +47,7 @@ impl Default for HittableList {
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let mut hit_rec: HitRecord = HitRecord {
-            p: Point3::ZERO,
+            point: Point3::ZERO,
             normal: Vec3::ZERO,
             mat: Arc::new(Lambertian::from_color(&Color::ZERO)),
             t: 0.0,

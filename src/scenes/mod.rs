@@ -4,8 +4,9 @@ use std::sync::Arc;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::hittable_list::HittableList;
-use crate::material::{Dielectric, Lambertian, Material, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use crate::perlin::PerlinTexture;
+use crate::quad::Quad;
 use crate::sphere::Sphere;
 use crate::texture::{Checker, Image, Noise};
 use crate::utilities;
@@ -34,6 +35,7 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
@@ -44,8 +46,9 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let focus_dist: f64         = 3.4;
 
     let cam: Camera = Camera::new(
-        aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup,
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
         defocus_angle, focus_dist
     );
 
@@ -124,6 +127,7 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
@@ -134,8 +138,9 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     let focus_dist: f64         = 10.0;
 
     let cam: Camera = Camera::new(
-        aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup,
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
         defocus_angle, focus_dist
     );
 
@@ -178,6 +183,7 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
@@ -188,8 +194,9 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     let focus_dist: f64         = 10.0;
 
     let cam: Camera = Camera::new(
-        aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup,
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
         defocus_angle, focus_dist
     );
 
@@ -224,6 +231,7 @@ pub fn earth() -> (HittableList, Camera) {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(0.0, 0.0, 12.0);
@@ -234,8 +242,9 @@ pub fn earth() -> (HittableList, Camera) {
     let focus_dist: f64         = 10.0;
 
     let cam: Camera = Camera::new(
-        aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup,
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
         defocus_angle, focus_dist
     );
 
@@ -272,6 +281,7 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     let image_width: u32        = 400;
     let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
@@ -282,8 +292,227 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     let focus_dist: f64         = 10.0;
 
     let cam: Camera = Camera::new(
-        aspect_ratio, image_width, samples_per_pixel, max_depth, 
-        vertical_fov, lookfrom, lookat, vup,
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+pub fn quads() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let left_red     = Arc::new(Lambertian::from_color(&Color::new(1.0, 0.2, 0.2)));
+    let back_green   = Arc::new(Lambertian::from_color(&Color::new(0.2, 1.0, 0.2)));
+    let right_blue   = Arc::new(Lambertian::from_color(&Color::new(0.2, 0.2, 1.0)));
+    let upper_orange = Arc::new(Lambertian::from_color(&Color::new(1.0, 0.5, 0.0)));
+    let lower_teal   = Arc::new(Lambertian::from_color(&Color::new(0.2, 0.8, 0.8)));
+
+    scene.add(Arc::new(Quad::new(
+        &Point3::new(-3.0,-2.0, 5.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        left_red)
+    ));
+    scene.add(Arc::new(Quad::new(
+        &Point3::new(-2.0,-2.0, 0.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        back_green)
+    ));
+    scene.add(Arc::new(Quad::new(
+        &Point3::new( 3.0,-2.0, 1.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        &Vec3::new(0.0, 4.0, 0.0),
+        right_blue)
+    ));
+    scene.add(Arc::new(Quad::new(
+        &Point3::new(-2.0, 3.0, 1.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, 4.0),
+        upper_orange)
+    ));
+    scene.add(Arc::new(Quad::new(
+        &Point3::new(-2.0,-3.0, 5.0),
+        &Vec3::new(4.0, 0.0, 0.0),
+        &Vec3::new(0.0, 0.0, -4.0),
+        lower_teal)
+    ));
+
+    // Camera
+    let aspect_ratio: f64       = 1.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.70, 0.80, 1.00);
+
+    let vertical_fov: f64       = 80.0;
+    let lookfrom: Point3        = Point3::new(0.0, 0.0, 9.0);
+    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+pub fn simple_light() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let perlin_texture : Arc<Noise> = Arc::new(Noise::new(256, PerlinTexture::Marble(7), 4.0));
+    scene.add(
+        Arc::new(
+                Sphere::new_stationary(
+                &Point3::new(0.0,-1000.0,0.0), 
+                1000.0, 
+                Arc::new(Lambertian::from_texture(perlin_texture.clone()))
+            )
+        )
+    );
+    scene.add(
+        Arc::new(
+                Sphere::new_stationary(
+                &Point3::new(0.0,2.0,0.0), 
+                2.0, 
+                Arc::new(Lambertian::from_texture(perlin_texture.clone()))
+            )
+        )
+    );
+
+    let diffuse_light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(4.0, 4.0, 4.0)));
+    scene.add(Arc::new(
+        Sphere::new_stationary(
+            &Point3::new(0.0, 7.0, 0.0), 
+            2.0,
+            diffuse_light.clone()
+        )
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(3.0, 1.0, -2.0), 
+            &Vec3::new(2.0, 0.0, 0.0), 
+            &Vec3::new(0.0, 2.0, 0.0), 
+            diffuse_light.clone()
+        )
+    ));
+
+    // Camera
+    let aspect_ratio: f64       = 16.0 / 9.0;
+    let image_width: u32        = 400;
+    let samples_per_pixel: u32  = 100;
+    let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.0, 0.0, 0.0);
+
+    let vertical_fov: f64       = 20.0;
+    let lookfrom: Point3        = Point3::new(26.0, 3.0, 6.0);
+    let lookat: Point3          = Point3::new(0.0, 2.0, 0.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+pub fn cornell_box() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let red: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.65, 0.05, 0.05)));
+    let white: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.73, 0.73, 0.73)));
+    let green: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.12, 0.45, 0.15)));
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(15.0, 15.0, 15.0)));
+
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(555.0, 0.0, 0.0),
+            &Vec3::new(0.0, 555.0, 0.0),
+            &Vec3::new(0.0, 0.0, 555.0),
+            green.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(0.0, 0.0, 0.0),
+            &Vec3::new(0.0, 555.0, 0.0),
+            &Vec3::new(0.0, 0.0, 555.0),
+            red.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(343.0, 554.0, 332.0),
+            &Vec3::new(-130.0, 0.0, 0.0),
+            &Vec3::new(0.0, 0.0, -105.0),
+            light.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(0.0, 0.0, 0.0),
+            &Vec3::new(555.0, 0.0, 0.0),
+            &Vec3::new(0.0, 0.0, 555.0),
+            white.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(555.0, 555.0, 555.0),
+            &Vec3::new(-555.0, 0.0, 0.0),
+            &Vec3::new(0.0, 0.0, -555.0),
+            white.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3::new(0.0, 0.0, 555.0),
+            &Vec3::new(555.0, 0.0, 0.0),
+            &Vec3::new(0.0, 555.0, 0.0),
+            white.clone(),
+        ),
+    ));
+    
+    // Camera
+    let aspect_ratio: f64       = 1.0;
+    let image_width: u32        = 600;
+    let samples_per_pixel: u32  = 200;
+    let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.0, 0.0, 0.0);
+
+    let vertical_fov: f64       = 40.0;
+    let lookfrom: Point3        = Point3::new(278.0, 278.0, -800.0);
+    let lookat: Point3          = Point3::new(278.0, 278.0, 0.0);
+    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
         defocus_angle, focus_dist
     );
 

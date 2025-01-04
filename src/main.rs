@@ -14,6 +14,7 @@ pub mod hittable_list;
 pub mod interval;
 pub mod material;
 pub mod perlin;
+pub mod quad;
 pub mod ray;
 pub mod scenes;
 pub mod sphere;
@@ -50,7 +51,7 @@ fn main() {
     let output_filepath: &Path = Path::new("test.ppm");
 
     // World + Camera
-    let (mut scene, cam) = scenes::perlin_spheres();
+    let (mut scene, cam) = scenes::cornell_box();
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 

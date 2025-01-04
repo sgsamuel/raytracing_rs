@@ -17,6 +17,12 @@ pub struct Sphere {
     bounding_box: AABB
 }
 
+impl fmt::Display for Sphere {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Center: {}; Radius: {}; Material: {}", self.center, self.radius, self.mat)
+    }
+}
+
 impl Sphere {
     pub fn new_stationary(static_center: &Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
         let rvec: Vec3 = radius * Vec3::ONE;
@@ -54,12 +60,6 @@ impl Sphere {
         let phi: f64 = f64::atan2(-p.component(Axis::Z), p.component(Axis::X)) + f64::consts::PI;
 
         (phi / (2.0 * f64::consts::PI), theta / f64::consts::PI)
-    }
-}
-
-impl fmt::Display for Sphere {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Center: {}; Radius: {}; Material: {}", self.center, self.radius, self.mat)
     }
 }
 

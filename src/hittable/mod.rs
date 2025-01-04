@@ -8,7 +8,7 @@ use crate::vec3::{Point3, Vec3};
 
 #[derive(Clone)]
 pub struct HitRecord {
-    pub p: Point3,
+    pub point: Point3,
     pub normal: Vec3,
     pub mat: Arc<dyn Material>,
     pub t: f64,
@@ -17,7 +17,7 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(p: Point3, mat: Arc<dyn Material>, t: f64, uv: (f64, f64), ray: &Ray, outward_normal: &Vec3) -> Self {
+    pub fn new(point: Point3, mat: Arc<dyn Material>, t: f64, uv: (f64, f64), ray: &Ray, outward_normal: &Vec3) -> Self {
         let front_face: bool = Vec3::dot(ray.direction(), outward_normal) < 0.0;
         let normal: Vec3 = if front_face {
             *outward_normal
@@ -26,7 +26,7 @@ impl HitRecord {
             -*outward_normal
         };
 
-        Self { p, normal, mat, t, uv, front_face }
+        Self { point, normal, mat, t, uv, front_face }
     }
 }
 

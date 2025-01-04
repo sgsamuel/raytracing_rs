@@ -19,6 +19,7 @@ pub struct Camera {
     pub image_width: u32,           // Rendered image width in pixel count
     pub samples_per_pixel: u32,     // Count of random samples for each pixel
     pub max_depth: u32,             // Maximum number of ray bounces into scene
+    pub background: Color,          // Scene background color
 
     pub vertical_fov: f64,          // Vertical view angle (field of view)
     pub lookfrom: Point3,           // Point camera is looking from
@@ -43,17 +44,18 @@ impl Camera {
         aspect_ratio: f64, 
         image_width: u32, 
         samples_per_pixel: u32, 
-        max_depth: u32, 
+        max_depth: u32,
+        background: &Color,
         vertical_fov: f64,
-        lookfrom: Point3,
-        lookat: Point3,
-        vup: Vec3,
+        lookfrom: &Point3,
+        lookat: &Point3,
+        vup: &Vec3,
         defocus_angle: f64,
         focus_dist: f64
     ) -> Self {
         let image_height: u32 = max((image_width as f64 / aspect_ratio) as u32, 1);
         let pixel_samples_scale: f64 = 1.0 / (samples_per_pixel as f64);
-        let center: Point3 = lookfrom;
+        let center: Point3 = *lookfrom;
 
         // Determine viewport dimensions.
         let theta: f64 = utilities::degrees_to_radians(vertical_fov);
@@ -63,7 +65,7 @@ impl Camera {
 
         // Calculate the u,v,w unit basis vectors for the camera coordinate frame.
         let w: Vec3 = Vec3::unit_vector(&(lookfrom - lookat));
-        let u: Vec3 = Vec3::unit_vector(&Vec3::cross(&vup, &w));
+        let u: Vec3 = Vec3::unit_vector(&Vec3::cross(vup, &w));
         let v: Vec3 = Vec3::cross(&w, &u);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -83,8 +85,9 @@ impl Camera {
         let defocus_disk_v: Vec3 = v * defocus_radius;
 
         Self { 
-            aspect_ratio, image_width, samples_per_pixel, max_depth,
-            vertical_fov, lookfrom, lookat, vup,
+            aspect_ratio, image_width, samples_per_pixel, max_depth, 
+            background: *background, vertical_fov, 
+            lookfrom: *lookfrom, lookat: *lookat, vup: *vup,
             defocus_angle, focus_dist,
             image_height, pixel_samples_scale, center, 
             pixel00_loc, pixel_delta_u, pixel_delta_v,
@@ -109,7 +112,7 @@ impl Camera {
                         let mut pixel_color: Color = Color::ZERO;
                         for _ in 0..self.samples_per_pixel {
                             let ray: Ray = self.get_ray(i, j);
-                            pixel_color += Self::ray_color(&ray, self.max_depth, world);
+                            pixel_color += self.ray_color(&ray, self.max_depth, world);
                         }
         
                         write_color(self.pixel_samples_scale * pixel_color)
@@ -149,25 +152,20 @@ impl Camera {
         self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v)
     }
 
-    fn ray_color(ray: &Ray, depth: u32, world: &HittableList) -> Color {        
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {        
         if depth == 0 {
             return Color::ZERO;
         }
 
         if let Some(rec) = world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
-            match rec.mat.scatter(ray, &rec) { 
-                Some((attenuation, scattered)) => {
-                    return attenuation * Self::ray_color(&scattered, depth-1, world)
-                },
-                None => {
-                    return Color::ZERO;
-                }
+            let color_from_emission: Color = rec.mat.emitted(rec.uv, &rec.point);
+            if let Some((attenuation, scattered)) = rec.mat.scatter(ray, &rec) { 
+                let color_from_scatter: Color = attenuation * self.ray_color(&scattered, depth-1, world);
+                return color_from_emission + color_from_scatter;
             }
+            return color_from_emission;
         }
-        
-        let unit_direction: Vec3 = Vec3::unit_vector(ray.direction());
-        let a: f64 = 0.5*(unit_direction.component(Axis::Y) + 1.0);
-        
-        (1.0 - a) * Color::ONE + a * Color::new(0.5, 0.7, 1.0)
+
+        self.background
     }
 }
