@@ -1,8 +1,10 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::bvh_node::BVHNode;
 use crate::camera::Camera;
 use crate::color::Color;
+use crate::constant_medium::ConstantMedium;
 use crate::hittable_list::HittableList;
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use crate::perlin::PerlinTexture;
@@ -96,7 +98,7 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
                 } 
                 else if choose_mat < 0.95 {
                     // Metal
-                    let albedo: Color = Color::random_range(0.5, 1.0);
+                    let albedo: Color = Color::random_in_range(0.5, 1.0);
                     let fuzz: f64 = utilities::random_f64_range(0.0, 0.5);
                     sphere_material = Arc::new(Metal::new(&albedo, fuzz));
                     scene.add(Arc::new(Sphere::new_stationary(&center, 0.2, sphere_material)));
@@ -500,40 +502,298 @@ pub fn cornell_box() -> (HittableList, Camera) {
         &Point3f::new(165.0, 330.0, 165.0),
         white.clone()
     );
-    let rotated_box1: EulerRotation = EulerRotation::new(
+    let rotated_box1:Arc<EulerRotation>  = Arc::new(EulerRotation::new(
         box1,
         &Vec3f::new(0.0, 15.0, 0.0),
-    );
-    let translated_box1: Translation = Translation::new(
-        Arc::new(rotated_box1),
+    ));
+    let translated_box1:Arc<Translation>  = Arc::new(Translation::new(
+        rotated_box1,
         &Point3f::new(265.0, 0.0, 295.0),
-    );
-    scene.add(Arc::new(translated_box1));
+    ));
+    scene.add(translated_box1);
 
     let box2: Arc<HittableList> = Quad::new_box(
         &Point3f::new(0.0, 0.0, 0.0),
         &Point3f::new(165.0, 165.0, 165.0),
         white.clone()
     );
-    let translated_box2: Translation = Translation::new(
+    let translated_box2:Arc<Translation> = Arc::new(Translation::new(
         box2,
         &Point3f::new(130.0, 0.0, 65.0),
-    );
-    let rotated_box2: EulerRotation = EulerRotation::new(
-        Arc::new(translated_box2),
+    ));
+    let rotated_box2:Arc<EulerRotation>  = Arc::new(EulerRotation::new(
+        translated_box2,
         &Vec3f::new(0.0, -18.0, 0.0),
-    );
-    scene.add(Arc::new(rotated_box2));
+    ));
+    scene.add(rotated_box2);
 
     // Camera
     let aspect_ratio: f64       = 1.0;
     let image_width: u32        = 600;
-    let samples_per_pixel: u32  = 100;
+    let samples_per_pixel: u32  = 200;
     let max_depth: u32          = 50;
     let background: Color       = Color::new(0.0, 0.0, 0.0);
 
     let vertical_fov: f64       = 40.0;
     let lookfrom: Point3f        = Point3f::new(278.0, 278.0, -800.0);
+    let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+pub fn cornell_smoke() -> (HittableList, Camera) {
+    // Scene
+    let mut scene: HittableList = HittableList::new();
+
+    let red: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.65, 0.05, 0.05)));
+    let white: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.73, 0.73, 0.73)));
+    let green: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.12, 0.45, 0.15)));
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(7.0, 7.0, 7.0)));
+
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
+            green.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(0.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
+            red.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(113.0, 554.0, 127.0),
+            &Vec3f::new(330.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 305.0),
+            light.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(0.0, 0.0, 0.0),
+            &Vec3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
+            white.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(555.0, 555.0, 555.0),
+            &Vec3f::new(-555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, -555.0),
+            white.clone(),
+        ),
+    ));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(0.0, 0.0, 555.0),
+            &Vec3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
+            white.clone(),
+        ),
+    ));
+    
+    let box1: Arc<HittableList> = Quad::new_box(
+        &Point3f::new(0.0, 0.0, 0.0),
+        &Point3f::new(165.0, 330.0, 165.0),
+        white.clone()
+    );
+    let rotated_box1:Arc<EulerRotation>  = Arc::new(EulerRotation::new(
+        box1,
+        &Vec3f::new(0.0, 15.0, 0.0),
+    ));
+    let translated_box1:Arc<Translation>  = Arc::new(Translation::new(
+        rotated_box1,
+        &Point3f::new(265.0, 0.0, 295.0),
+    ));
+    scene.add(Arc::new(ConstantMedium::from_color(translated_box1, 0.01, &Color::ZERO)));
+
+    let box2: Arc<HittableList> = Quad::new_box(
+        &Point3f::new(0.0, 0.0, 0.0),
+        &Point3f::new(165.0, 165.0, 165.0),
+        white.clone()
+    );
+    let translated_box2:Arc<Translation> = Arc::new(Translation::new(
+        box2,
+        &Point3f::new(130.0, 0.0, 65.0),
+    ));
+    let rotated_box2:Arc<EulerRotation>  = Arc::new(EulerRotation::new(
+        translated_box2,
+        &Vec3f::new(0.0, -18.0, 0.0),
+    ));
+    scene.add(Arc::new(ConstantMedium::from_color(rotated_box2, 0.01, &Color::ONE)));
+
+
+    // Camera
+    let aspect_ratio: f64       = 1.0;
+    let image_width: u32        = 600;
+    let samples_per_pixel: u32  = 200;
+    let max_depth: u32          = 50;
+    let background: Color       = Color::new(0.0, 0.0, 0.0);
+
+    let vertical_fov: f64       = 40.0;
+    let lookfrom: Point3f        = Point3f::new(278.0, 278.0, -800.0);
+    let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+
+    let defocus_angle: f64      = 0.0;
+    let focus_dist: f64         = 10.0;
+
+    let cam: Camera = Camera::new(
+        aspect_ratio, image_width, samples_per_pixel, 
+        max_depth, &background, vertical_fov, 
+        &lookfrom, &lookat, &vup,
+        defocus_angle, focus_dist
+    );
+
+    (scene, cam)
+}
+
+#[allow(dead_code)]
+pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (HittableList, Camera) {
+    // World
+    let mut scene: HittableList = HittableList::new();
+
+    let mut boxes1: HittableList = HittableList::new();
+    let ground: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.48, 0.83, 0.53)));
+
+    let boxes_per_side: u32 = 20;
+    let w: f64 = 100.0;
+    for i in 0..boxes_per_side {
+        for j in 0..boxes_per_side {
+            let x0 = -1000.0 + (i as f64) * w;
+            let z0 = -1000.0 + (j as f64) * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = utilities::random_f64_range(1.0, 101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(
+                Quad::new_box(
+                    &Point3f::new(x0, y0, z0),
+                    &Point3f::new(x1, y1, z1),
+                    ground.clone(),
+                )
+            );
+        }
+    }
+
+    scene.add(Arc::new(BVHNode::from_hittable_list(&mut boxes1)));
+
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(7.0, 7.0, 7.0)));
+    scene.add(Arc::new(Quad::new(
+        &Point3f::new(123.0, 554.0, 147.0),
+        &Vec3f::new(300.0, 0.0, 0.0),
+        &Vec3f::new(0.0, 0.0, 265.0),
+        light,
+    )));
+
+    let center1: Vec3f = Point3f::new(400.0, 400.0, 200.0);
+    let center2: Vec3f = center1 + Vec3f::new(30.0, 0.0, 0.0);
+    let sphere_material: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.7, 0.3, 0.1)));
+    scene.add(Arc::new(Sphere::new_moving(&center1, &center2, 50.0, sphere_material)));
+
+    scene.add(Arc::new(Sphere::new_stationary(
+        &Point3f::new(260.0, 150.0, 45.0),
+        50.0,
+        Arc::new(Dielectric::new(1.5)),
+    )));
+    scene.add(Arc::new(Sphere::new_stationary(
+        &Point3f::new(0.0, 150.0, 145.0),
+        50.0,
+        Arc::new(Metal::new(&Color::new(0.8, 0.8, 0.9), 1.0)),
+    )));
+
+    let mut boundary: Arc<Sphere> = Arc::new(Sphere::new_stationary(
+        &Point3f::new(360.0, 150.0, 145.0),
+        70.0,
+        Arc::new(Dielectric::new(1.5)),
+    ));
+    scene.add(boundary.clone());
+    scene.add(Arc::new(ConstantMedium::from_color(
+        boundary.clone(),
+        0.2,
+        &Color::new(0.2, 0.4, 0.9),
+    )));
+
+    boundary = Arc::new(Sphere::new_stationary(
+        &Point3f::new(0.0, 0.0, 0.0),
+        5000.0,
+        Arc::new(Dielectric::new(1.5)),
+    ));
+    scene.add(Arc::new(ConstantMedium::from_color(
+        boundary.clone(),
+        0.0001,
+        &Color::new(1.0, 1.0, 1.0),
+    )));
+
+    let earth_filepath: &Path = Path::new("earthmap.png");
+    let earth_texture : Arc<Image> = Arc::new(
+        Image::read_image(earth_filepath).unwrap()
+    );
+    let earth_surface : Arc<Lambertian> = Arc::new(
+        Lambertian::from_texture(earth_texture)
+    );
+    scene.add(Arc::new(Sphere::new_stationary(
+        &Point3f::new(400.0, 200.0, 400.0),
+        100.0,
+        earth_surface,
+    )));
+
+    let perlin_texture : Arc<Noise> = Arc::new(Noise::new(256, PerlinTexture::Marble(7), 0.2));
+    scene.add(Arc::new(Sphere::new_stationary(
+        &Point3f::new(220.0, 280.0, 300.0),
+        80.0,
+        Arc::new(Lambertian::from_texture(perlin_texture)),
+    )));
+
+    let mut boxes2: HittableList = HittableList::new();
+    let white: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.73, 0.73, 0.73)));
+    let ns: u32 = 1000;
+
+    for _ in 0..ns {
+        boxes2.add(Arc::new(Sphere::new_stationary(
+            &Point3f::random_in_range(0.0, 165.0),
+            10.0,
+            white.clone(),
+        )));
+    }
+
+    scene.add(Arc::new(Translation::new(
+        Arc::new(EulerRotation::new(
+            Arc::new(BVHNode::from_hittable_list(&mut boxes2)),
+            &Vec3f::new(0.0, 15.0, 0.0),
+        )),
+        &Vec3f::new(-100.0, 270.0, 395.0),
+    )));
+
+    // Camera
+    let aspect_ratio: f64       = 1.0;
+    let image_width: u32        = image_width;
+    let samples_per_pixel: u32  = samples_per_pixel;
+    let max_depth: u32          = max_depth;
+    let background: Color       = Color::new(0.0, 0.0, 0.0);
+
+    let vertical_fov: f64       = 40.0;
+    let lookfrom: Point3f        = Point3f::new(478.0, 278.0, -600.0);
     let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
     let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 

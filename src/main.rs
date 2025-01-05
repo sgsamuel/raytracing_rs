@@ -8,6 +8,7 @@ use log::info;
 pub mod aabb;
 pub mod bvh_node;
 pub mod color;
+pub mod constant_medium;
 pub mod camera;
 pub mod hittable;
 pub mod hittable_list;
@@ -49,10 +50,10 @@ fn main() {
     let now: Instant = Instant::now();
 
     // Output
-    let output_filepath: &Path = Path::new("test.ppm");
+    let output_filepath: &Path = Path::new("final.ppm");
 
     // World + Camera
-    let (mut scene, cam) = scenes::cornell_box();
+    let (mut scene, cam) = scenes::final_scene(400,   250,  4);
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 

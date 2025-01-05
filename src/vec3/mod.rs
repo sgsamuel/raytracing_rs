@@ -99,7 +99,7 @@ impl Vec3f {
         Vec3f::new(utilities::random(), utilities::random(), utilities::random())
     }
 
-    pub fn random_range(min: f64, max: f64) -> Vec3f {
+    pub fn random_in_range(min: f64, max: f64) -> Vec3f {
         Vec3f::new(
             utilities::random_f64_range(min, max), 
             utilities::random_f64_range(min, max), 
@@ -134,7 +134,7 @@ impl Vec3f {
     #[inline]
     pub fn random_unit_vector() -> Vec3f {
         loop {
-            let p: Vec3f = Self::random_range(-1.0, 1.0);
+            let p: Vec3f = Self::random_in_range(-1.0, 1.0);
             let lensq: f64 = p.length_squared();
             if f64::EPSILON < lensq && lensq <= 1.0 {
                 return p / lensq.sqrt();
