@@ -6,7 +6,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::interval::Interval;
 use crate::material::Lambertian;
 use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Point3f, Vec3f};
 
 #[derive(Clone)]
 pub struct HittableList {
@@ -47,8 +47,8 @@ impl Default for HittableList {
 impl Hittable for HittableList {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let mut hit_rec: HitRecord = HitRecord {
-            point: Point3::ZERO,
-            normal: Vec3::ZERO,
+            point: Point3f::ZERO,
+            normal: Vec3f::ZERO,
             mat: Arc::new(Lambertian::from_color(&Color::ZERO)),
             t: 0.0,
             uv: (0.0, 0.0),

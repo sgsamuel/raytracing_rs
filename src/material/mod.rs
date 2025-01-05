@@ -6,14 +6,14 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::texture::{Texture, Solid};
 use crate::utilities;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Point3f, Vec3f};
 
 pub trait Material: Send + Sync + fmt::Display {
     fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord) -> Option<(Color, Ray)> {
         None
     }
 
-    fn emitted(&self, _uv: (f64, f64), _point: &Point3) -> Color {
+    fn emitted(&self, _uv: (f64, f64), _point: &Point3f) -> Color {
         Color::ZERO
     }
 }
@@ -41,7 +41,7 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction: Vec3 = rec.normal + Vec3::random_unit_vector();
+        let mut scatter_direction: Vec3f = rec.normal + Vec3f::random_unit_vector();
 
         // Catch degenerate scatter direction
         if scatter_direction.near_zero() {
@@ -77,11 +77,11 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected: Vec3 = Vec3::reflect(&Vec3::unit_vector(ray_in.direction()), &rec.normal);
-        let scattered_dir = reflected + self.fuzz * Vec3::random_unit_vector();
+        let reflected: Vec3f = Vec3f::reflect(&Vec3f::unit_vector(ray_in.direction()), &rec.normal);
+        let scattered_dir = reflected + self.fuzz * Vec3f::random_unit_vector();
         
         let scattered: Ray = Ray::with_time(&rec.point, &scattered_dir, ray_in.time());
-        if Vec3::dot(scattered.direction(), &rec.normal) > 0.0 {
+        if Vec3f::dot(scattered.direction(), &rec.normal) > 0.0 {
             let attenuation: Color = self.albedo;
             return Some((attenuation, scattered))
         }  
@@ -120,16 +120,16 @@ impl Material for Dielectric {
             self.refractive_index
         };
 
-        let unit_direction: Vec3 = Vec3::unit_vector(ray_in.direction());
-        let cos_theta: f64 = Vec3::dot(&-unit_direction, &rec.normal).min(1.0);
+        let unit_direction: Vec3f = Vec3f::unit_vector(ray_in.direction());
+        let cos_theta: f64 = Vec3f::dot(&-unit_direction, &rec.normal).min(1.0);
         let sin_theta: f64 = (1.0 - cos_theta*cos_theta).sqrt();
 
         let cannot_refract: bool = ri * sin_theta > 1.0;
-        let direction: Vec3 = if cannot_refract || Dielectric::reflectance(cos_theta, ri) > utilities::random() {
-            Vec3::reflect(&unit_direction, &rec.normal)
+        let direction: Vec3f = if cannot_refract || Dielectric::reflectance(cos_theta, ri) > utilities::random() {
+            Vec3f::reflect(&unit_direction, &rec.normal)
         } 
         else {            
-            Vec3::refract(&unit_direction, &rec.normal, ri)
+            Vec3f::refract(&unit_direction, &rec.normal, ri)
         };
 
         let attenuation: Color = Color::ONE;
@@ -160,7 +160,7 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn emitted(&self, uv: (f64, f64), point: &Point3) -> Color {
+    fn emitted(&self, uv: (f64, f64), point: &Point3f) -> Color {
         self.texture.value(uv, point)
     }
 }

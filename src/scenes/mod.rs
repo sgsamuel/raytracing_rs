@@ -10,7 +10,7 @@ use crate::quad::Quad;
 use crate::sphere::Sphere;
 use crate::texture::{Checker, Image, Noise};
 use crate::utilities;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Point3f, Vec3f};
 
 #[allow(dead_code)]
 pub fn simple_spheres() -> (HittableList, Camera) {
@@ -23,11 +23,11 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let material_bubble: Arc<Dielectric> = Arc::new(Dielectric::new(1.0 / 1.5));
     let material_right: Arc<Metal>       = Arc::new(Metal::new(&Color::new(0.8, 0.6, 0.2), 0.2));
 
-    scene.add(Arc::new(Sphere::new_stationary(&Point3::new(0.0,-100.5,-1.0), 100.0, material_ground)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3::new(0.0,0.0,-1.2), 0.5, material_center)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3::new(-1.0,0.0,-1.0), 0.5, material_left)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3::new(1.0,0.0,-1.0), 0.5, material_right)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0,-100.5,-1.0), 100.0, material_ground)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0,0.0,-1.2), 0.5, material_center)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0,0.0,-1.0), 0.5, material_left)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(1.0,0.0,-1.0), 0.5, material_right)));
 
 
     // Camera
@@ -38,9 +38,9 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(-2.0, 2.0, 1.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, -1.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(-2.0, 2.0, 1.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, -1.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 10.0;
     let focus_dist: f64         = 3.4;
@@ -67,7 +67,7 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,-1000.0,0.0), 
+                &Point3f::new(0.0,-1000.0,0.0), 
                 1000.0, 
                 ground_material
             )
@@ -77,20 +77,20 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat: f64 = utilities::random();
-            let center: Point3 = Point3::new(
+            let center: Point3f = Point3f::new(
                 a as f64 + 0.9 * utilities::random(), 
                 0.2, 
                 b as f64 + 0.9 * utilities::random()
             );
 
-            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+            if (center - Point3f::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let sphere_material: Arc<dyn Material>;
 
                 if choose_mat < 0.8 {
                     // Lambertian
-                    let albedo: Vec3 = Color::random() * Color::random();
+                    let albedo: Vec3f = Color::random() * Color::random();
                     sphere_material = Arc::new(Lambertian::from_color(&albedo));
-                    let center2: Point3 = center + Vec3::new(0.0, utilities::random_f64_range(0.0, 0.5), 0.0);
+                    let center2: Point3f = center + Vec3f::new(0.0, utilities::random_f64_range(0.0, 0.5), 0.0);
                     scene.add(Arc::new(Sphere::new_moving(&center, &center2, 0.2, sphere_material)));
                 } 
                 else if choose_mat < 0.95 {
@@ -111,15 +111,15 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
 
     let dielectric_material: Arc<Dielectric> = Arc::new(Dielectric::new(1.5));
     scene.add(Arc::new(Sphere::new_stationary(
-        &Point3::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
+        &Point3f::new(0.0, 1.0, 0.0), 1.0, dielectric_material)));
 
     let lambertian_material: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.4, 0.2, 0.1)));
     scene.add(Arc::new(Sphere::new_stationary(
-        &Point3::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
+        &Point3f::new(-4.0, 1.0, 0.0), 1.0, lambertian_material)));
 
     let metal_material: Arc<Metal> = Arc::new(Metal::new(&Color::new(0.7, 0.6, 0.5), 0.0));
     scene.add(Arc::new(Sphere::new_stationary(
-        &Point3::new(4.0, 1.0, 0.0), 1.0, metal_material)));
+        &Point3f::new(4.0, 1.0, 0.0), 1.0, metal_material)));
 
 
     // Camera
@@ -130,9 +130,9 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.6;
     let focus_dist: f64         = 10.0;
@@ -162,7 +162,7 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,-10.0,0.0), 
+                &Point3f::new(0.0,-10.0,0.0), 
                 10.0, 
                 Arc::new(Lambertian::from_texture(ground_texture.clone()))
             )
@@ -171,7 +171,7 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,10.0,0.0), 
+                &Point3f::new(0.0,10.0,0.0), 
                 10.0, 
                 Arc::new(Lambertian::from_texture(ground_texture.clone()))
             )
@@ -186,9 +186,9 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -219,7 +219,7 @@ pub fn earth() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,0.0,0.0), 
+                &Point3f::new(0.0,0.0,0.0), 
                 2.0, 
                 earth_surface
             )
@@ -234,9 +234,9 @@ pub fn earth() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(0.0, 0.0, 12.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(0.0, 0.0, 12.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -260,7 +260,7 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,-1000.0,0.0), 
+                &Point3f::new(0.0,-1000.0,0.0), 
                 1000.0, 
                 Arc::new(Lambertian::from_texture(perlin_texture.clone()))
             )
@@ -269,7 +269,7 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,2.0,0.0), 
+                &Point3f::new(0.0,2.0,0.0), 
                 2.0, 
                 Arc::new(Lambertian::from_texture(perlin_texture.clone()))
             )
@@ -284,9 +284,9 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(13.0, 2.0, 3.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -313,33 +313,33 @@ pub fn quads() -> (HittableList, Camera) {
     let lower_teal   = Arc::new(Lambertian::from_color(&Color::new(0.2, 0.8, 0.8)));
 
     scene.add(Arc::new(Quad::new(
-        &Point3::new(-3.0,-2.0, 5.0),
-        &Vec3::new(0.0, 0.0, -4.0),
-        &Vec3::new(0.0, 4.0, 0.0),
+        &Point3f::new(-3.0,-2.0, 5.0),
+        &Vec3f::new(0.0, 0.0, -4.0),
+        &Vec3f::new(0.0, 4.0, 0.0),
         left_red)
     ));
     scene.add(Arc::new(Quad::new(
-        &Point3::new(-2.0,-2.0, 0.0),
-        &Vec3::new(4.0, 0.0, 0.0),
-        &Vec3::new(0.0, 4.0, 0.0),
+        &Point3f::new(-2.0,-2.0, 0.0),
+        &Vec3f::new(4.0, 0.0, 0.0),
+        &Vec3f::new(0.0, 4.0, 0.0),
         back_green)
     ));
     scene.add(Arc::new(Quad::new(
-        &Point3::new( 3.0,-2.0, 1.0),
-        &Vec3::new(0.0, 0.0, 4.0),
-        &Vec3::new(0.0, 4.0, 0.0),
+        &Point3f::new( 3.0,-2.0, 1.0),
+        &Vec3f::new(0.0, 0.0, 4.0),
+        &Vec3f::new(0.0, 4.0, 0.0),
         right_blue)
     ));
     scene.add(Arc::new(Quad::new(
-        &Point3::new(-2.0, 3.0, 1.0),
-        &Vec3::new(4.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, 4.0),
+        &Point3f::new(-2.0, 3.0, 1.0),
+        &Vec3f::new(4.0, 0.0, 0.0),
+        &Vec3f::new(0.0, 0.0, 4.0),
         upper_orange)
     ));
     scene.add(Arc::new(Quad::new(
-        &Point3::new(-2.0,-3.0, 5.0),
-        &Vec3::new(4.0, 0.0, 0.0),
-        &Vec3::new(0.0, 0.0, -4.0),
+        &Point3f::new(-2.0,-3.0, 5.0),
+        &Vec3f::new(4.0, 0.0, 0.0),
+        &Vec3f::new(0.0, 0.0, -4.0),
         lower_teal)
     ));
 
@@ -351,9 +351,9 @@ pub fn quads() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.70, 0.80, 1.00);
 
     let vertical_fov: f64       = 80.0;
-    let lookfrom: Point3        = Point3::new(0.0, 0.0, 9.0);
-    let lookat: Point3          = Point3::new(0.0, 0.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(0.0, 0.0, 9.0);
+    let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -377,7 +377,7 @@ pub fn simple_light() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,-1000.0,0.0), 
+                &Point3f::new(0.0,-1000.0,0.0), 
                 1000.0, 
                 Arc::new(Lambertian::from_texture(perlin_texture.clone()))
             )
@@ -386,7 +386,7 @@ pub fn simple_light() -> (HittableList, Camera) {
     scene.add(
         Arc::new(
                 Sphere::new_stationary(
-                &Point3::new(0.0,2.0,0.0), 
+                &Point3f::new(0.0,2.0,0.0), 
                 2.0, 
                 Arc::new(Lambertian::from_texture(perlin_texture.clone()))
             )
@@ -396,16 +396,16 @@ pub fn simple_light() -> (HittableList, Camera) {
     let diffuse_light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(4.0, 4.0, 4.0)));
     scene.add(Arc::new(
         Sphere::new_stationary(
-            &Point3::new(0.0, 7.0, 0.0), 
+            &Point3f::new(0.0, 7.0, 0.0), 
             2.0,
             diffuse_light.clone()
         )
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(3.0, 1.0, -2.0), 
-            &Vec3::new(2.0, 0.0, 0.0), 
-            &Vec3::new(0.0, 2.0, 0.0), 
+            &Point3f::new(3.0, 1.0, -2.0), 
+            &Vec3f::new(2.0, 0.0, 0.0), 
+            &Vec3f::new(0.0, 2.0, 0.0), 
             diffuse_light.clone()
         )
     ));
@@ -418,9 +418,9 @@ pub fn simple_light() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.0, 0.0, 0.0);
 
     let vertical_fov: f64       = 20.0;
-    let lookfrom: Point3        = Point3::new(26.0, 3.0, 6.0);
-    let lookat: Point3          = Point3::new(0.0, 2.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(26.0, 3.0, 6.0);
+    let lookat: Point3f          = Point3f::new(0.0, 2.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -447,61 +447,61 @@ pub fn cornell_box() -> (HittableList, Camera) {
 
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(555.0, 0.0, 0.0),
-            &Vec3::new(0.0, 555.0, 0.0),
-            &Vec3::new(0.0, 0.0, 555.0),
+            &Point3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
             green.clone(),
         ),
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(0.0, 0.0, 0.0),
-            &Vec3::new(0.0, 555.0, 0.0),
-            &Vec3::new(0.0, 0.0, 555.0),
+            &Point3f::new(0.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
             red.clone(),
         ),
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(343.0, 554.0, 332.0),
-            &Vec3::new(-130.0, 0.0, 0.0),
-            &Vec3::new(0.0, 0.0, -105.0),
+            &Point3f::new(343.0, 554.0, 332.0),
+            &Vec3f::new(-130.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, -105.0),
             light.clone(),
         ),
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(0.0, 0.0, 0.0),
-            &Vec3::new(555.0, 0.0, 0.0),
-            &Vec3::new(0.0, 0.0, 555.0),
+            &Point3f::new(0.0, 0.0, 0.0),
+            &Vec3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, 555.0),
             white.clone(),
         ),
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(555.0, 555.0, 555.0),
-            &Vec3::new(-555.0, 0.0, 0.0),
-            &Vec3::new(0.0, 0.0, -555.0),
+            &Point3f::new(555.0, 555.0, 555.0),
+            &Vec3f::new(-555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, -555.0),
             white.clone(),
         ),
     ));
     scene.add(Arc::new(
         Quad::new(
-            &Point3::new(0.0, 0.0, 555.0),
-            &Vec3::new(555.0, 0.0, 0.0),
-            &Vec3::new(0.0, 555.0, 0.0),
+            &Point3f::new(0.0, 0.0, 555.0),
+            &Vec3f::new(555.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 555.0, 0.0),
             white.clone(),
         ),
     ));
     
     scene.add(Quad::new_box(
-        &Point3::new(130.0, 0.0, 65.0),
-        &Point3::new(295.0, 165.0, 230.0),
+        &Point3f::new(130.0, 0.0, 65.0),
+        &Point3f::new(295.0, 165.0, 230.0),
         white.clone())
     );
     scene.add(Quad::new_box(
-        &Point3::new(265.0, 0.0, 295.0),
-        &Point3::new(430.0, 330.0, 460.0),
+        &Point3f::new(265.0, 0.0, 295.0),
+        &Point3f::new(430.0, 330.0, 460.0),
         white.clone())
     );
 
@@ -513,9 +513,9 @@ pub fn cornell_box() -> (HittableList, Camera) {
     let background: Color       = Color::new(0.0, 0.0, 0.0);
 
     let vertical_fov: f64       = 40.0;
-    let lookfrom: Point3        = Point3::new(278.0, 278.0, -800.0);
-    let lookat: Point3          = Point3::new(278.0, 278.0, 0.0);
-    let vup: Vec3               = Vec3::new(0.0, 1.0, 0.0);
+    let lookfrom: Point3f        = Point3f::new(278.0, 278.0, -800.0);
+    let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
+    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;

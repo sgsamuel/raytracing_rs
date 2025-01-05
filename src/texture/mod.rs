@@ -7,10 +7,10 @@ use image::{DynamicImage, GenericImageView};
 use crate::color::Color;
 use crate::interval::Interval;
 use crate::perlin::{Perlin, PerlinTexture};
-use crate::vec3::{Axis, Point3};
+use crate::vec3::{Axis, Point3f};
 
 pub trait Texture: Send + Sync + fmt::Display {
-    fn value(&self, uv: (f64, f64), point: &Point3) -> Color;
+    fn value(&self, uv: (f64, f64), point: &Point3f) -> Color;
 }
 
 
@@ -35,7 +35,7 @@ impl Solid {
 }
 
 impl Texture for Solid {
-    fn value(&self, _uv: (f64, f64), _point: &Point3) -> Color {
+    fn value(&self, _uv: (f64, f64), _point: &Point3f) -> Color {
         self.albedo
     }
 }
@@ -68,7 +68,7 @@ impl Checker {
 }
 
 impl Texture for Checker {
-    fn value(&self, uv: (f64, f64), point: &Point3) -> Color {
+    fn value(&self, uv: (f64, f64), point: &Point3f) -> Color {
         let x_int: i32 = (self.inv_scale * point.component(Axis::X)).floor() as i32;
         let y_int: i32 = (self.inv_scale * point.component(Axis::Y)).floor() as i32;
         let z_int: i32 = (self.inv_scale * point.component(Axis::Z)).floor() as i32;
@@ -99,7 +99,7 @@ impl Image {
 }
 
 impl Texture for Image {
-    fn value(&self, uv: (f64, f64), _point: &Point3) -> Color {
+    fn value(&self, uv: (f64, f64), _point: &Point3f) -> Color {
         if self.img.height() == 0 {
             return Color::new(0.0, 1.0, 1.0);
         }
@@ -141,7 +141,7 @@ impl Noise {
 }
 
 impl Texture for Noise {
-    fn value(&self, _uv: (f64, f64), point: &Point3) -> Color {
+    fn value(&self, _uv: (f64, f64), point: &Point3f) -> Color {
         let noise_factor: f64 = match self.perlin_texture {
             PerlinTexture::Normal => {
                 0.5 * (1.0 + self.noise.noise(&(self.scale * point)))

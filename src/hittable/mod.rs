@@ -4,12 +4,12 @@ use crate::aabb::AABB;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vec3::{Point3, Vec3};
+use crate::vec3::{Point3f, Vec3f};
 
 #[derive(Clone)]
 pub struct HitRecord {
-    pub point: Point3,
-    pub normal: Vec3,
+    pub point: Point3f,
+    pub normal: Vec3f,
     pub mat: Arc<dyn Material>,
     pub t: f64,
     pub uv: (f64, f64),
@@ -17,9 +17,9 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(point: Point3, mat: Arc<dyn Material>, t: f64, uv: (f64, f64), ray: &Ray, outward_normal: &Vec3) -> Self {
-        let front_face: bool = Vec3::dot(ray.direction(), outward_normal) < 0.0;
-        let normal: Vec3 = if front_face {
+    pub fn new(point: Point3f, mat: Arc<dyn Material>, t: f64, uv: (f64, f64), ray: &Ray, outward_normal: &Vec3f) -> Self {
+        let front_face: bool = Vec3f::dot(ray.direction(), outward_normal) < 0.0;
+        let normal: Vec3f = if front_face {
             *outward_normal
         } 
         else {

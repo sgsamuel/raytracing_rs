@@ -2,7 +2,7 @@ use std::ops::Add;
 
 use crate::interval::Interval;
 use crate::ray::Ray;
-use crate::vec3::{Axis, Point3, Vec3};
+use crate::vec3::{Axis, Point3f, Vec3f};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AABB {
@@ -30,7 +30,7 @@ impl AABB {
         aabb
     }
 
-    pub fn from_point(a: &Point3, b: &Point3) -> Self {
+    pub fn from_point(a: &Point3f, b: &Point3f) -> Self {
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
         let mut aabb: Self = Self {
@@ -83,8 +83,8 @@ impl AABB {
     }
 
     pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> bool {
-        let ray_orig: &Point3 = ray.origin();
-        let ray_dir: &Vec3  = ray.direction();
+        let ray_orig: &Point3f = ray.origin();
+        let ray_dir: &Vec3f  = ray.direction();
 
         for &axis in Axis::iterator() {
             let ax_ivl: Interval = self.axis_interval(axis);
@@ -118,10 +118,10 @@ impl AABB {
     }
 }
 
-impl<'v, 'bb> Add<&'v Vec3> for &'bb AABB {
+impl<'v, 'bb> Add<&'v Vec3f> for &'bb AABB {
     type Output = AABB;
 
-    fn add(self, other: &'v Vec3) -> AABB {
+    fn add(self, other: &'v Vec3f) -> AABB {
         AABB { 
             x: self.x + other.component(Axis::X), 
             y: self.y + other.component(Axis::Y), 
@@ -130,34 +130,34 @@ impl<'v, 'bb> Add<&'v Vec3> for &'bb AABB {
     }
 }
 
-impl Add<Vec3> for AABB {    
+impl Add<Vec3f> for AABB {    
     type Output = AABB;
 
     #[inline]
-    fn add(self, other: Vec3) -> AABB {
+    fn add(self, other: Vec3f) -> AABB {
         &self + &other
     }
 }
 
-impl<'v> Add<&'v Vec3> for AABB {    
+impl<'v> Add<&'v Vec3f> for AABB {    
     type Output = AABB;
 
     #[inline]
-    fn add(self, other: &'v Vec3) -> AABB {
+    fn add(self, other: &'v Vec3f) -> AABB {
         &self + other
     }
 }
 
-impl<'bb> Add<Vec3> for &'bb AABB {    
+impl<'bb> Add<Vec3f> for &'bb AABB {    
     type Output = AABB;
 
     #[inline]
-    fn add(self, other: Vec3) -> AABB {
+    fn add(self, other: Vec3f) -> AABB {
         self + &other
     }
 }
 
-impl<'bb, 'v> Add<&'bb AABB> for &'v Vec3 {
+impl<'bb, 'v> Add<&'bb AABB> for &'v Vec3f {
     type Output = AABB;
 
     #[inline]
@@ -166,7 +166,7 @@ impl<'bb, 'v> Add<&'bb AABB> for &'v Vec3 {
     }
 }
 
-impl Add<AABB> for Vec3 {
+impl Add<AABB> for Vec3f {
     type Output = AABB;
 
     #[inline]
@@ -175,7 +175,7 @@ impl Add<AABB> for Vec3 {
     }
 }
 
-impl<'bb> Add<&'bb AABB> for Vec3 {
+impl<'bb> Add<&'bb AABB> for Vec3f {
     type Output = AABB;
 
     #[inline]
@@ -184,7 +184,7 @@ impl<'bb> Add<&'bb AABB> for Vec3 {
     }
 }
 
-impl<'v> Add<AABB> for &'v Vec3 {
+impl<'v> Add<AABB> for &'v Vec3f {
     type Output = AABB;
 
     #[inline]

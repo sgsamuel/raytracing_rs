@@ -1,7 +1,7 @@
 use crate::interval::Interval;
 use crate::vec3::Axis;
 
-pub type Color = crate::vec3::Vec3;
+pub type Color = crate::vec3::Vec3f;
 
 #[inline]
 pub fn linear_to_gamma(linear_component: f64) -> f64 {
