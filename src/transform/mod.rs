@@ -7,7 +7,7 @@ use crate::ray::Ray;
 use crate::utilities;
 use crate::vec3::{Axis, Point3f, Vec3f};
 
-struct Translation {
+pub struct Translation {
     object: Arc<dyn Hittable>,
     offset: Vec3f,
     bounding_box: AABB
@@ -40,27 +40,53 @@ impl Hittable for Translation {
 }
 
 
-struct Rotation {
-    axis: Axis,
-    cos_theta: f64,
-    sin_theta: f64,
+#[derive(Clone, Copy)]
+pub struct AxisRotation;
+
+impl AxisRotation {
+    fn rotate(axis: Axis, point: &Point3f, radian: f64) -> Point3f {
+        match axis {
+            Axis::X => {
+                Point3f::new(
+                    point.component(Axis::X),
+                    radian.cos().mul_add(point.component(Axis::Y), -radian.sin() * point.component(Axis::Z)),
+                    radian.sin().mul_add(point.component(Axis::Y), radian.cos() * point.component(Axis::Z))
+                )
+            },
+            Axis::Y => {
+                Point3f::new(
+                    radian.cos().mul_add(point.component(Axis::X), radian.sin() * point.component(Axis::Z)),
+                    point.component(Axis::Y),
+                    (-radian.sin()).mul_add(point.component(Axis::X), radian.cos() * point.component(Axis::Z))
+                )
+            },
+            Axis::Z => {
+                Point3f::new(
+                    radian.cos().mul_add(point.component(Axis::X), -radian.sin() * point.component(Axis::Y)),
+                    radian.sin().mul_add(point.component(Axis::X), radian.cos() * point.component(Axis::Y)),
+                    point.component(Axis::Z)
+                )
+            }
+        }
+    }
 }
 
-struct EulerRotation {
+pub struct EulerRotation {
     object: Arc<dyn Hittable>,
-    euler_angles: Vec3f<Rotation>,
+    euler_angles: Vec3f,
     bounding_box: AABB
 }
 
-impl Rotation {
-    pub fn new(object: Arc<dyn Hittable>, axis: Axis, degree_angle: f64) -> Self {
-        let radians: f64 = utilities::degrees_to_radians(degree_angle);
-        let cos_theta: f64 = f64::cos(radians);
-        let sin_theta: f64 = f64::sin(radians);
-        let mut bounding_box: &AABB = object.bounding_box();
-        
-        let mut min: Point3f = Point3f::INFINITY;
-        let mut max: Point3f = -Point3f::INFINITY;
+impl EulerRotation {
+    pub fn new(object: Arc<dyn Hittable>, angles: &Vec3f) -> Self {
+        let mut euler_angles: Vec3f = Default::default();
+        for &axis in Axis::iterator() {
+            euler_angles.set_component(axis, utilities::degrees_to_radians(angles.component(axis)));
+        }
+
+        let bounding_box: &AABB = object.bounding_box();
+        let mut point_min: Point3f = Point3f::INFINITY;
+        let mut point_max: Point3f = -Point3f::INFINITY;
 
         #[allow(clippy::needless_range_loop)]
         for i in 0..2 {
@@ -70,39 +96,50 @@ impl Rotation {
                     let y: f64 = (j as f64).mul_add(bounding_box.y.max, ((1 - j) as f64) * bounding_box.y.min);
                     let z: f64 = (k as f64).mul_add(bounding_box.z.max, ((1 - k) as f64) * bounding_box.z.min);
 
-                    let new_x: f64 =  cos_theta*x + sin_theta*z;
-                    let new_z: f64 = -sin_theta*x + cos_theta*z;
-
-                    let test_vec: Vec3f = Vec3f::new(new_x, y, new_z);
+                    let mut rotated_point: Point3f = Point3f::new(x, y, z);
+                    for &axis in Axis::iterator() {
+                        rotated_point = AxisRotation::rotate(axis, &rotated_point, euler_angles.component(axis));
+                    }
 
                     for &axis in Axis::iterator() {
-                        min.x = f64::min(min.component(axis), test_vec.component(axis));
-                        max[c] = std::fmax(max[c], tester[c]);
+                        point_min.set_component(axis, f64::min(point_min.component(axis), rotated_point.component(axis)));
+                        point_max.set_component(axis, f64::max(point_max.component(axis), rotated_point.component(axis)));
                     }
                 }
             }
         }
 
-//         let bounding_box: AABB = object.bounding_box() + offset;
-//         Self { object, axis, cos_theta, sin_theta, bounding_box }
-//     }
-// }
+        Self { object, euler_angles, bounding_box: AABB::from_point(&point_min, &point_max) }
+    }
+}
 
-// impl Hittable for Rotation {
-//     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
-//         // Move the ray backwards by the offset
-//         let offset_r: Ray = Ray::with_time(&(ray.origin() - self.offset), ray.direction(), ray.time());
+impl Hittable for EulerRotation {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        // Transform the ray from world space to object space.
+        let mut rotated_origin: Point3f = ray.origin().clone();
+        let mut rotated_direction: Vec3f = ray.direction().clone();
+        for &axis in Axis::iterator() {
+            rotated_origin = AxisRotation::rotate(axis, &rotated_origin, -self.euler_angles.component(axis));
+            rotated_direction = AxisRotation::rotate(axis, &rotated_direction, -self.euler_angles.component(axis));
+        }
 
-//         // Determine whether an intersection exists along the offset ray (and if so, where)
-//         if let Some(mut rec) = self.object.hit(&offset_r, ray_t) {
-//             // Move the intersection point forwards by the offset
-//             rec.point += self.offset;
-//             return Some(rec);
-//         }
-//         None
-//     }
+        let rotated_ray: Ray = Ray::new(&rotated_origin, &rotated_direction);
 
-//     fn bounding_box(&self) -> &AABB {
-//         &self.bounding_box
-//     }
-// }
+        // Determine whether an intersection exists in object space (and if so, where).
+        if let Some(mut rec) = self.object.hit(&rotated_ray, ray_t) {
+            // Transform the intersection from object space back to world space.
+
+            for &axis in Axis::iterator() {
+                rec.point = AxisRotation::rotate(axis, &rec.point , self.euler_angles.component(axis));
+                rec.normal = AxisRotation::rotate(axis, &rec.normal, self.euler_angles.component(axis));
+            }
+
+            return Some(rec);
+        }
+        None
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bounding_box
+    }
+}

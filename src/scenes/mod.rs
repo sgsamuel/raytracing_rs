@@ -9,6 +9,7 @@ use crate::perlin::PerlinTexture;
 use crate::quad::Quad;
 use crate::sphere::Sphere;
 use crate::texture::{Checker, Image, Noise};
+use crate::transform::{Translation, EulerRotation};
 use crate::utilities;
 use crate::vec3::{Point3f, Vec3f};
 
@@ -494,21 +495,40 @@ pub fn cornell_box() -> (HittableList, Camera) {
         ),
     ));
     
-    scene.add(Quad::new_box(
-        &Point3f::new(130.0, 0.0, 65.0),
-        &Point3f::new(295.0, 165.0, 230.0),
-        white.clone())
+    let box1: Arc<HittableList> = Quad::new_box(
+        &Point3f::new(0.0, 0.0, 0.0),
+        &Point3f::new(165.0, 330.0, 165.0),
+        white.clone()
     );
-    scene.add(Quad::new_box(
+    let rotated_box1: EulerRotation = EulerRotation::new(
+        box1,
+        &Vec3f::new(0.0, 15.0, 0.0),
+    );
+    let translated_box1: Translation = Translation::new(
+        Arc::new(rotated_box1),
         &Point3f::new(265.0, 0.0, 295.0),
-        &Point3f::new(430.0, 330.0, 460.0),
-        white.clone())
     );
+    scene.add(Arc::new(translated_box1));
+
+    let box2: Arc<HittableList> = Quad::new_box(
+        &Point3f::new(0.0, 0.0, 0.0),
+        &Point3f::new(165.0, 165.0, 165.0),
+        white.clone()
+    );
+    let translated_box2: Translation = Translation::new(
+        box2,
+        &Point3f::new(130.0, 0.0, 65.0),
+    );
+    let rotated_box2: EulerRotation = EulerRotation::new(
+        Arc::new(translated_box2),
+        &Vec3f::new(0.0, -18.0, 0.0),
+    );
+    scene.add(Arc::new(rotated_box2));
 
     // Camera
     let aspect_ratio: f64       = 1.0;
     let image_width: u32        = 600;
-    let samples_per_pixel: u32  = 200;
+    let samples_per_pixel: u32  = 100;
     let max_depth: u32          = 50;
     let background: Color       = Color::new(0.0, 0.0, 0.0);
 

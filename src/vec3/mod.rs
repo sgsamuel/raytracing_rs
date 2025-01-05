@@ -66,6 +66,14 @@ impl<T> Vec3<T> where T: Copy + Clone {
             Axis::Z => self.z,
         }
     }
+
+    pub fn set_component(&mut self, axis: Axis, val: T) {
+        match axis {
+            Axis::X => self.x = val,
+            Axis::Y => self.y = val,
+            Axis::Z => self.z = val,
+        }
+    }
 }
 
 impl Vec3f {
