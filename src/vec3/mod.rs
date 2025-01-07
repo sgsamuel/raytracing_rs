@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::iter::Sum;
 use std::fmt;
 use std::slice::Iter;
 use rand::{
@@ -190,6 +191,12 @@ impl Vec3f {
             y: v1.z * v2.x - v1.x * v2.z,
             z: v1.x * v2.y - v1.y * v2.x,
         }
+    }
+}
+
+impl Sum for Vec3f {
+    fn sum<I: Iterator<Item = Vec3f>>(iter: I) -> Vec3f {
+        iter.fold(Vec3f::default(), Add::add)
     }
 }
 

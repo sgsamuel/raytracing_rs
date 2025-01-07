@@ -22,20 +22,22 @@ pub struct Camera {
     pub background: Color,          // Scene background color
 
     pub vertical_fov: f64,          // Vertical view angle (field of view)
-    pub lookfrom: Point3f,           // Point camera is looking from
-    pub lookat: Point3f,             // Point camera is looking at
-    pub vup: Vec3f,                  // Camera-relative "up" direction
+    pub lookfrom: Point3f,          // Point camera is looking from
+    pub lookat: Point3f,            // Point camera is looking at
+    pub vup: Vec3f,                 // Camera-relative "up" direction
     pub defocus_angle: f64,         // Variation angle of rays through each pixel
     pub focus_dist: f64,            // Distance from camera lookfrom point to plane of perfect focus
 
     image_height: u32,              // Rendered image height
     pixel_samples_scale: f64,       // Color scale factor for a sum of pixel samples
-    center: Point3f,                 // Camera center
-    pixel00_loc: Point3f,            // Location of pixel (0, 0)
-    pixel_delta_u: Vec3f,            // Offset to pixel to the right
-    pixel_delta_v: Vec3f,            // Offset to pixel below
-    defocus_disk_u: Vec3f,           // Defocus disk horizontal radius
-    defocus_disk_v: Vec3f            // Defocus disk vertical radius
+    sqrt_spp: u32,                  // Square root of number of samples per pixel
+    recip_sqrt_spp: f64,            // 1 / sqrt_spp
+    center: Point3f,                // Camera center
+    pixel00_loc: Point3f,           // Location of pixel (0, 0)
+    pixel_delta_u: Vec3f,           // Offset to pixel to the right
+    pixel_delta_v: Vec3f,           // Offset to pixel below
+    defocus_disk_u: Vec3f,          // Defocus disk horizontal radius
+    defocus_disk_v: Vec3f           // Defocus disk vertical radius
 }
 
 impl Camera {
@@ -54,7 +56,9 @@ impl Camera {
         focus_dist: f64
     ) -> Self {
         let image_height: u32 = max((image_width as f64 / aspect_ratio) as u32, 1);
-        let pixel_samples_scale: f64 = 1.0 / (samples_per_pixel as f64);
+        let sqrt_spp: u32 = f64::sqrt(samples_per_pixel as f64) as u32;
+        let recip_sqrt_spp: f64 = 1.0 / (sqrt_spp as f64);
+        let pixel_samples_scale: f64 = 1.0 / ((sqrt_spp * sqrt_spp) as f64);
         let center: Point3f = *lookfrom;
 
         // Determine viewport dimensions.
@@ -89,8 +93,8 @@ impl Camera {
             background: *background, vertical_fov, 
             lookfrom: *lookfrom, lookat: *lookat, vup: *vup,
             defocus_angle, focus_dist,
-            image_height, pixel_samples_scale, center, 
-            pixel00_loc, pixel_delta_u, pixel_delta_v,
+            image_height, pixel_samples_scale, sqrt_spp, recip_sqrt_spp, 
+            center, pixel00_loc, pixel_delta_u, pixel_delta_v,
             defocus_disk_u, defocus_disk_v
         }
     }
@@ -110,10 +114,16 @@ impl Camera {
                 (0..self.image_width).into_par_iter().map(
                     |i: u32| {
                         let mut pixel_color: Color = Color::ZERO;
-                        for _ in 0..self.samples_per_pixel {
-                            let ray: Ray = self.get_ray(i, j);
-                            pixel_color += self.ray_color(&ray, self.max_depth, world);
-                        }
+                        pixel_color += (0..self.sqrt_spp).into_par_iter().map(
+                            |s_j: u32| {
+                                (0..self.sqrt_spp).into_par_iter().map(
+                                    |s_i: u32| {
+                                        let r: Ray = self.get_ray(i, j, s_i, s_j);
+                                        self.ray_color(&r, self.max_depth, world)
+                                    }
+                                ).sum::<Color>()
+                            }
+                        ).sum::<Color>();
         
                         write_color(self.pixel_samples_scale * pixel_color)
                     }
@@ -125,13 +135,13 @@ impl Camera {
         writer.flush().unwrap();
     }
 
-    fn get_ray(&self, i: u32, j: u32) -> Ray {
+    fn get_ray(&self, i: u32, j: u32, s_i: u32, s_j: u32) -> Ray {
         // Construct a camera ray originating from the defocus disk and directed at a randomly
-        // sampled point around the pixel location i, j.
-        let random_offset: Vec3f = Vec3f::sample_unit_square();
+        // sampled point around the pixel location i, j for stratified sample square s_i, s_j.
+        let offset: Vec3f = self.sample_square_stratified(s_i, s_j);
         let pixel_sample: Vec3f = self.pixel00_loc
-                            + (((i as f64) + random_offset.component(Axis::X)) * self.pixel_delta_u)
-                            + (((j as f64) + random_offset.component(Axis::Y)) * self.pixel_delta_v);
+                            + (((i as f64) + offset.component(Axis::X)) * self.pixel_delta_u)
+                            + (((j as f64) + offset.component(Axis::Y)) * self.pixel_delta_v);
 
         let ray_origin: Point3f = if self.defocus_angle <= 0.0 {
             self.center
@@ -144,6 +154,15 @@ impl Camera {
         let ray_time = utilities::random();
 
         Ray::with_time(&ray_origin, &ray_direction, ray_time)
+    }
+
+    fn sample_square_stratified(&self, s_i: u32, s_j: u32) -> Vec3f {
+        // Returns the vector to a random point in the square sub-pixel specified by grid
+        // indices s_i and s_j, for an idealized unit square pixel [-.5,-.5] to [+.5,+.5].
+        let px: f64 = ((s_i as f64 + utilities::random()) * self.recip_sqrt_spp) - 0.5;
+        let py: f64 = ((s_j as f64 + utilities::random()) * self.recip_sqrt_spp) - 0.5;
+
+        return Vec3f::new(px, py, 0.0);    
     }
 
     fn defocus_disk_sample(&self) -> Point3f {
