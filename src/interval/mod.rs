@@ -75,6 +75,7 @@ impl<'ivl> Add<f64> for &'ivl Interval {
     }
 }
 
+#[allow(clippy::op_ref)]
 impl Add<f64> for Interval {    
     type Output = Interval;
 

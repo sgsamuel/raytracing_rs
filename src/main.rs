@@ -14,6 +14,8 @@ pub mod hittable;
 pub mod hittable_list;
 pub mod interval;
 pub mod material;
+pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod quad;
 pub mod ray;
@@ -53,11 +55,11 @@ fn main() {
     let output_filepath: &Path = Path::new("test.ppm");
 
     // World + Camera
-    let (mut scene, cam) = scenes::cornell_box();
+    let (mut scene, cam, lights) = scenes::cornell_smoke();
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
-    cam.render(&world, output_filepath);
+    cam.render(&world, lights, output_filepath);
     
     let elapsed: Duration = now.elapsed();
     info!("Done. Time elapsed {:.2?}", elapsed);

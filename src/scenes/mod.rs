@@ -5,8 +5,9 @@ use crate::bvh_node::BVHNode;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::constant_medium::ConstantMedium;
+use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
-use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
+use crate::material::{Dielectric, DiffuseLight, Empty, Lambertian, Material, Metal};
 use crate::perlin::PerlinTexture;
 use crate::quad::Quad;
 use crate::sphere::Sphere;
@@ -16,7 +17,7 @@ use crate::utilities;
 use crate::vec3::{Point3f, Vec3f};
 
 #[allow(dead_code)]
-pub fn simple_spheres() -> (HittableList, Camera) {
+pub fn simple_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -26,11 +27,11 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let material_bubble: Arc<Dielectric> = Arc::new(Dielectric::new(1.0 / 1.5));
     let material_right: Arc<Metal>       = Arc::new(Metal::new(&Color::new(0.8, 0.6, 0.2), 0.2));
 
-    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0,-100.5,-1.0), 100.0, material_ground)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0,0.0,-1.2), 0.5, material_center)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0,0.0,-1.0), 0.5, material_left)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0,0.0,-1.0), 0.4, material_bubble)));
-    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(1.0,0.0,-1.0), 0.5, material_right)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0, -100.5,-1.0), 100.0, material_ground)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(0.0, 0.0,-1.2), 0.5, material_center)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0, 0.0,-1.0), 0.5, material_left)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(-1.0, 0.0,-1.0), 0.4, material_bubble)));
+    scene.add(Arc::new(Sphere::new_stationary(&Point3f::new(1.0, 0.0,-1.0), 0.5, material_right)));
 
 
     // Camera
@@ -43,7 +44,7 @@ pub fn simple_spheres() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(-2.0, 2.0, 1.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, -1.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 10.0;
     let focus_dist: f64         = 3.4;
@@ -55,11 +56,11 @@ pub fn simple_spheres() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn bouncing_spheres() -> (HittableList, Camera) {
+pub fn bouncing_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -135,7 +136,7 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.6;
     let focus_dist: f64         = 10.0;
@@ -147,11 +148,11 @@ pub fn bouncing_spheres() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn checkered_spheres() -> (HittableList, Camera) {
+pub fn checkered_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -191,7 +192,7 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -203,11 +204,11 @@ pub fn checkered_spheres() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn earth() -> (HittableList, Camera) {
+pub fn earth() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -239,7 +240,7 @@ pub fn earth() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(0.0, 0.0, 12.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -251,11 +252,11 @@ pub fn earth() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn perlin_spheres() -> (HittableList, Camera) {
+pub fn perlin_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -289,7 +290,7 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(13.0, 2.0, 3.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -301,11 +302,11 @@ pub fn perlin_spheres() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn quads() -> (HittableList, Camera) {
+pub fn quads() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -356,7 +357,7 @@ pub fn quads() -> (HittableList, Camera) {
     let vertical_fov: f64       = 80.0;
     let lookfrom: Point3f        = Point3f::new(0.0, 0.0, 9.0);
     let lookat: Point3f          = Point3f::new(0.0, 0.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -368,11 +369,11 @@ pub fn quads() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn simple_light() -> (HittableList, Camera) {
+pub fn simple_light() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -423,7 +424,7 @@ pub fn simple_light() -> (HittableList, Camera) {
     let vertical_fov: f64       = 20.0;
     let lookfrom: Point3f        = Point3f::new(26.0, 3.0, 6.0);
     let lookat: Point3f          = Point3f::new(0.0, 2.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -435,19 +436,19 @@ pub fn simple_light() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn cornell_box() -> (HittableList, Camera) {
+pub fn cornell_box() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
     let red: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.65, 0.05, 0.05)));
     let white: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.73, 0.73, 0.73)));
     let green: Arc<Lambertian> = Arc::new(Lambertian::from_color(&Color::new(0.12, 0.45, 0.15)));
-    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(15.0, 15.0, 15.0)));
 
+    // Cornell box sides
     scene.add(Arc::new(
         Quad::new(
             &Point3f::new(555.0, 0.0, 0.0),
@@ -462,14 +463,6 @@ pub fn cornell_box() -> (HittableList, Camera) {
             &Vec3f::new(0.0, 555.0, 0.0),
             &Vec3f::new(0.0, 0.0, 555.0),
             red.clone(),
-        ),
-    ));
-    scene.add(Arc::new(
-        Quad::new(
-            &Point3f::new(343.0, 554.0, 332.0),
-            &Vec3f::new(-130.0, 0.0, 0.0),
-            &Vec3f::new(0.0, 0.0, -105.0),
-            light.clone(),
         ),
     ));
     scene.add(Arc::new(
@@ -497,6 +490,18 @@ pub fn cornell_box() -> (HittableList, Camera) {
         ),
     ));
     
+    // Light
+    let light: Arc<DiffuseLight> = Arc::new(DiffuseLight::from_color(&Color::new(15.0, 15.0, 15.0)));
+    scene.add(Arc::new(
+        Quad::new(
+            &Point3f::new(343.0, 554.0, 332.0),
+            &Vec3f::new(-130.0, 0.0, 0.0),
+            &Vec3f::new(0.0, 0.0, -105.0),
+            light.clone(),
+        ),
+    ));
+
+    // Box
     let box1: Arc<HittableList> = Quad::new_box(
         &Point3f::new(0.0, 0.0, 0.0),
         &Point3f::new(165.0, 330.0, 165.0),
@@ -512,32 +517,45 @@ pub fn cornell_box() -> (HittableList, Camera) {
     ));
     scene.add(translated_box1);
 
-    let box2: Arc<HittableList> = Quad::new_box(
-        &Point3f::new(0.0, 0.0, 0.0),
-        &Point3f::new(165.0, 165.0, 165.0),
-        white.clone()
-    );
-    let translated_box2:Arc<Translation> = Arc::new(Translation::new(
-        box2,
-        &Point3f::new(130.0, 0.0, 65.0),
+    // Glass Sphere
+    let glass: Arc<Dielectric> = Arc::new(Dielectric::new(1.5));
+    scene.add(Arc::new(
+        Sphere::new_stationary(
+            &Point3f::new(190.0, 90.0, 190.0),
+            90.0, 
+            glass)
     ));
-    let rotated_box2:Arc<EulerRotation>  = Arc::new(EulerRotation::new(
-        translated_box2,
-        &Vec3f::new(0.0, -18.0, 0.0),
+
+    // Light Sources
+    let empty_material: Arc<Empty> = Arc::new(Empty);
+    let mut lights: HittableList = HittableList::new();
+    lights.add(Arc::new(
+    Quad::new(
+        &Point3f::new(343.0, 554.0, 332.0), 
+        &Vec3f::new(-130.0, 0.0, 0.0),
+        &Vec3f::new(0.0, 0.0, -105.0),
+        empty_material.clone()
+        )
     ));
-    scene.add(rotated_box2);
+    lights.add(Arc::new(
+        Sphere::new_stationary(
+            &Point3f::new(190.0, 90.0, 190.0),
+            90.0,
+            empty_material.clone()
+        )
+    ));
 
     // Camera
     let aspect_ratio: f64       = 1.0;
     let image_width: u32        = 600;
-    let samples_per_pixel: u32  = 200;
+    let samples_per_pixel: u32  = 1000;
     let max_depth: u32          = 50;
     let background: Color       = Color::new(0.0, 0.0, 0.0);
 
     let vertical_fov: f64       = 40.0;
     let lookfrom: Point3f        = Point3f::new(278.0, 278.0, -800.0);
     let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -549,11 +567,11 @@ pub fn cornell_box() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(lights))
 }
 
 #[allow(dead_code)]
-pub fn cornell_smoke() -> (HittableList, Camera) {
+pub fn cornell_smoke() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -652,7 +670,7 @@ pub fn cornell_smoke() -> (HittableList, Camera) {
     let vertical_fov: f64       = 40.0;
     let lookfrom: Point3f        = Point3f::new(278.0, 278.0, -800.0);
     let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -664,11 +682,11 @@ pub fn cornell_smoke() -> (HittableList, Camera) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }
 
 #[allow(dead_code)]
-pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (HittableList, Camera) {
+pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (HittableList, Camera, Arc<dyn Hittable>) {
     // World
     let mut scene: HittableList = HittableList::new();
 
@@ -795,7 +813,7 @@ pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> 
     let vertical_fov: f64       = 40.0;
     let lookfrom: Point3f        = Point3f::new(478.0, 278.0, -600.0);
     let lookat: Point3f          = Point3f::new(278.0, 278.0, 0.0);
-    let vup: Vec3f               = Vec3f::new(0.0, 1.0, 0.0);
+    let vup: Vec3f               = Vec3f::E2;
 
     let defocus_angle: f64      = 0.0;
     let focus_dist: f64         = 10.0;
@@ -807,5 +825,5 @@ pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> 
         defocus_angle, focus_dist
     );
 
-    (scene, cam)
+    (scene, cam, Arc::new(HittableList::new()))
 }

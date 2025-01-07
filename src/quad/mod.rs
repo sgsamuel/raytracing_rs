@@ -7,6 +7,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::utilities::random;
 use crate::vec3::{Axis, Point3f, Vec3f};
 
 #[derive(Clone)]
@@ -15,6 +16,7 @@ pub struct Quad {
     u: Vec3f,
     v: Vec3f,
     w: Vec3f,
+    area: f64,
     quad_eq_d: f64,
     normal: Vec3f,
     mat: Arc<dyn Material>,
@@ -32,6 +34,7 @@ impl Quad {
         let n: Vec3f = Vec3f::cross(u, v);
         let normal: &Vec3f = &Vec3f::unit_vector(&n);
         let w: Vec3f = n / Vec3f::length_squared(&n);
+        let area: f64 = n.length();
         let quad_eq_d: f64 = Vec3f::dot(normal, quad_start);
 
         // Compute the bounding box of all four vertices.
@@ -43,6 +46,7 @@ impl Quad {
             u: *u,
             v: *v,
             w,
+            area,
             quad_eq_d, 
             normal: *normal, 
             mat, 
@@ -168,5 +172,19 @@ impl Hittable for Quad {
 
     fn bounding_box(&self) -> &AABB {
         &self.bounding_box
+    }
+
+    fn pdf_value(&self, origin: &Point3f, direction: &Vec3f) -> f64 {
+        if let Some(rec) =  self.hit(&Ray::new(origin, direction), &Interval::new(0.001, f64::INFINITY)) {
+            let distance_squared: f64 = rec.t * rec.t * direction.length_squared();
+            let cos_theta: f64 = f64::abs(Vec3f::dot(direction, &rec.normal) / direction.length());
+            return distance_squared / (cos_theta * self.area);
+        }
+        0.0
+    }
+
+    fn random(&self, origin: &Point3f) -> Vec3f {
+        let p: Vec3f = self.quad_start + (random() * self.u) + (random() * self.v);
+        p - *origin
     }
 }

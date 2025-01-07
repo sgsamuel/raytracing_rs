@@ -134,6 +134,7 @@ impl Add<Vec3f> for AABB {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: Vec3f) -> AABB {
         &self + &other
     }
@@ -143,6 +144,7 @@ impl<'v> Add<&'v Vec3f> for AABB {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: &'v Vec3f) -> AABB {
         &self + other
     }
@@ -152,6 +154,7 @@ impl<'bb> Add<Vec3f> for &'bb AABB {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: Vec3f) -> AABB {
         self + &other
     }
@@ -170,6 +173,7 @@ impl Add<AABB> for Vec3f {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: AABB) -> AABB {
         &other + &self
     }
@@ -179,6 +183,7 @@ impl<'bb> Add<&'bb AABB> for Vec3f {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: &'bb AABB) -> AABB {
         other + &self
     }
@@ -188,6 +193,7 @@ impl<'v> Add<AABB> for &'v Vec3f {
     type Output = AABB;
 
     #[inline]
+    #[allow(clippy::op_ref)]
     fn add(self, other: AABB) -> AABB {
         &other + self
     }

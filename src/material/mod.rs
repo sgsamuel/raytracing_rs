@@ -1,22 +1,48 @@
+use core::f64;
 use std::fmt;
 use std::sync::Arc;
 
 use crate::color::Color;
 use crate::hittable::HitRecord;
+use crate::pdf::{CosinePDF, EmptyPDF, SpherePDF, PDF};
 use crate::ray::Ray;
 use crate::texture::{Texture, Solid};
 use crate::utilities;
 use crate::vec3::{Point3f, Vec3f};
 
+
+pub struct ScatterRecord {
+    pub attenuation: Color,
+    pub pdf_ptr: Arc<dyn PDF>,
+    pub skip_pdf: bool,
+    pub skip_pdf_ray: Ray
+}
+
 pub trait Material: Send + Sync + fmt::Display {
-    fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, _ray_in: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
 
-    fn emitted(&self, _uv: (f64, f64), _point: &Point3f) -> Color {
+    fn emitted(&self, _ray_in: &Ray, _rec: &HitRecord, _uv: (f64, f64), _point: &Point3f) -> Color {
         Color::ZERO
     }
+
+    fn scattering_pdf(&self, _ray_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        0.0
+    }
 }
+
+
+pub struct Empty;
+
+impl fmt::Display for Empty {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        
+        write!(f, "Material Empty.")
+    }
+}
+
+impl Material for Empty {}
 
 
 pub struct Lambertian {
@@ -40,17 +66,22 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction: Vec3f = rec.normal + Vec3f::random_unit_vector();
+    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let scatter_rec: ScatterRecord = ScatterRecord { 
+            attenuation: self.texture.value(rec.uv, &rec.point), 
+            pdf_ptr: Arc::new(CosinePDF::new(&rec.normal)), 
+            skip_pdf: false, 
+            skip_pdf_ray: Ray::ZERO
+        };
+        Some(scatter_rec)
+    }
 
-        // Catch degenerate scatter direction
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
+    fn scattering_pdf(&self, _ray_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cos_theta: f64 = Vec3f::dot(&rec.normal, &Vec3f::unit_vector(scattered.direction()));
+        if cos_theta < 0.0 {
+            return 0.0;
         }
-        
-        let attenuation: Color = self.texture.value(rec.uv, &rec.point);
-        let scattered: Ray = Ray::with_time(&rec.point, &scatter_direction, ray_in.time());
-        Some((attenuation, scattered))
+        cos_theta / f64::consts::PI
     }
 }
 
@@ -76,16 +107,17 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let reflected: Vec3f = Vec3f::reflect(&Vec3f::unit_vector(ray_in.direction()), &rec.normal);
-        let scattered_dir = reflected + self.fuzz * Vec3f::random_unit_vector();
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let mut reflected: Vec3f = Vec3f::reflect(ray_in.direction(), &rec.normal);
+        reflected = Vec3f::unit_vector(&reflected) + self.fuzz * Vec3f::random_unit_vector();
         
-        let scattered: Ray = Ray::with_time(&rec.point, &scattered_dir, ray_in.time());
-        if Vec3f::dot(scattered.direction(), &rec.normal) > 0.0 {
-            let attenuation: Color = self.albedo;
-            return Some((attenuation, scattered))
-        }  
-        None
+        let scatter_rec: ScatterRecord = ScatterRecord { 
+            attenuation: self.albedo, 
+            pdf_ptr: Arc::new(EmptyPDF), 
+            skip_pdf: true, 
+            skip_pdf_ray: Ray::with_time(&rec.point, &reflected, ray_in.time())
+        };
+        Some(scatter_rec)
     }
 }
 
@@ -112,7 +144,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let ri: f64 = if rec.front_face {
             1.0 / self.refractive_index
         } 
@@ -132,9 +164,13 @@ impl Material for Dielectric {
             Vec3f::refract(&unit_direction, &rec.normal, ri)
         };
 
-        let attenuation: Color = Color::ONE;
-        let scattered: Ray = Ray::with_time(&rec.point, &direction, ray_in.time());
-        Some((attenuation, scattered))
+        let scatter_rec: ScatterRecord = ScatterRecord { 
+            attenuation: Color::ONE, 
+            pdf_ptr: Arc::new(EmptyPDF), 
+            skip_pdf: true, 
+            skip_pdf_ray: Ray::with_time(&rec.point, &direction, ray_in.time())
+        };
+        Some(scatter_rec)
     }
 }
 
@@ -160,7 +196,10 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn emitted(&self, uv: (f64, f64), point: &Point3f) -> Color {
+    fn emitted(&self, _ray_in: &Ray, rec: &HitRecord, uv: (f64, f64), point: &Point3f) -> Color {
+        if !rec.front_face {
+            return Color::ZERO;
+        }
         self.texture.value(uv, point)
     }
 }
@@ -187,9 +226,17 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, ray_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let attenuation: Color = self.texture.value(rec.uv, &rec.point);
-        let scattered: Ray = Ray::with_time(&rec.point, &Vec3f::random_unit_vector(), ray_in.time());
-        Some((attenuation, scattered))
+    fn scatter(&self, _ray_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let scatter_rec: ScatterRecord = ScatterRecord { 
+            attenuation: self.texture.value(rec.uv, &rec.point), 
+            pdf_ptr: Arc::new(SpherePDF), 
+            skip_pdf: false, 
+            skip_pdf_ray: Ray::ZERO
+        };
+        Some(scatter_rec)
+    }
+
+    fn scattering_pdf(&self, _ray_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        1.0 / (4.0 * f64::consts::PI)
     }
 }

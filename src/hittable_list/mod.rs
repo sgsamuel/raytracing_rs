@@ -1,5 +1,8 @@
 use std::sync::Arc;
 
+use rand::seq::SliceRandom;
+use rayon::prelude::*;
+
 use crate::aabb::AABB;
 use crate::color::Color;
 use crate::hittable::{HitRecord, Hittable};
@@ -74,5 +77,22 @@ impl Hittable for HittableList {
 
     fn bounding_box(&self) -> &AABB {
         &self.bounding_box
+    }
+
+    fn pdf_value(&self, origin: &Point3f, direction: &Vec3f) -> f64 {
+        let weight: f64 = 1.0 / self.objects.len() as f64;
+
+        self.objects.clone().into_par_iter().map(
+            |object: Arc<dyn Hittable>| {
+                weight * object.pdf_value(origin, direction)
+            }
+        ).sum::<f64>()
+    }
+
+    fn random(&self, origin: &Point3f) -> Vec3f {
+        if let Some(hit) = self.objects.choose(&mut rand::thread_rng()) {
+            return hit.random(origin);
+        }
+        Vec3f::ZERO
     }
 }

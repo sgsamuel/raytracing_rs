@@ -57,7 +57,7 @@ impl Hittable for ConstantMedium {
                 let t: f64 = rec1.t + hit_distance / ray_length;
                 let rec: HitRecord = HitRecord { 
                     point: ray.at(t), 
-                    normal: Vec3f::new(1.0, 0.0, 0.0), // Arbitrary 
+                    normal: Vec3f::E1, // Arbitrary 
                     mat: self.phase_function.clone(), 
                     t,
                     uv: (0.0, 0.0), // Arbitrary

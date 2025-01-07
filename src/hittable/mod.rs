@@ -34,4 +34,12 @@ pub trait Hittable : Send + Sync {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 
     fn bounding_box(&self) -> &AABB;
+
+    fn pdf_value(&self, _origin: &Point3f, _direction: &Vec3f) -> f64 {
+        0.0
+    }
+
+    fn random(&self, _origin: &Point3f) -> Vec3f {
+        Vec3f::E1
+    }
 }

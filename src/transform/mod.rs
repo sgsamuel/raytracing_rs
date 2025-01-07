@@ -116,8 +116,8 @@ impl EulerRotation {
 impl Hittable for EulerRotation {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         // Transform the ray from world space to object space.
-        let mut rotated_origin: Point3f = ray.origin().clone();
-        let mut rotated_direction: Vec3f = ray.direction().clone();
+        let mut rotated_origin: Point3f = *ray.origin();
+        let mut rotated_direction: Vec3f = *ray.direction();
         for &axis in Axis::iterator() {
             rotated_origin = AxisRotation::rotate(axis, &rotated_origin, -self.euler_angles.component(axis));
             rotated_direction = AxisRotation::rotate(axis, &rotated_direction, -self.euler_angles.component(axis));

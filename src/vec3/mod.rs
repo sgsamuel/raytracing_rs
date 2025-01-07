@@ -1,3 +1,4 @@
+use core::f64;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::iter::Sum;
 use std::fmt;
@@ -7,7 +8,7 @@ use rand::{
     Rng,
 };
 
-use crate::utilities;
+use crate::utilities::{self, random};
 
 #[derive(Clone, Copy, Debug)]
 pub enum Axis {
@@ -96,6 +97,24 @@ impl Vec3f {
         z: f64::INFINITY,
     };
 
+    pub const E1: Vec3f = Vec3f {
+        x: 1.0,
+        y: 0.0,
+        z: 0.0,
+    };
+
+    pub const E2: Vec3f = Vec3f {
+        x: 0.0,
+        y: 1.0,
+        z: 0.0,
+    };
+
+    pub const E3: Vec3f = Vec3f {
+        x: 0.0,
+        y: 0.0,
+        z: 1.0,
+    };
+
     pub fn random() -> Vec3f {
         Vec3f::new(utilities::random(), utilities::random(), utilities::random())
     }
@@ -164,6 +183,19 @@ impl Vec3f {
             return on_unit_sphere;
         }
         -on_unit_sphere
+    }
+
+    #[inline]
+    pub fn random_cosine_direction() -> Vec3f  {
+        let r1: f64 = random();
+        let r2: f64 = random();
+    
+        let phi: f64 = 2.0 * f64::consts::PI * r1;
+        let x = f64::cos(phi) * f64::sqrt(r2);
+        let y = f64::sin(phi) * f64::sqrt(r2);
+        let z = f64::sqrt(1.0 - r2);
+    
+        Vec3f::new(x, y, z)
     }
 
     #[inline]
@@ -406,7 +438,7 @@ mod tests {
         let v2: Vec3f = Vec3f::ZERO;
         assert_eq!(v2.near_zero(), true);
 
-        let v3: Vec3f = Vec3f::new(0.0, 1.0, 0.0);
+        let v3: Vec3f = Vec3f::E2;
         assert_eq!(v3.near_zero(), false);
     }
 
@@ -446,9 +478,9 @@ mod tests {
 
     #[test]
     fn cross() {
-        let v1: Vec3f = Vec3f::new(1.0, 0.0, 0.0);
-        let v2: Vec3f = Vec3f::new(0.0, 1.0, 0.0);
-        assert_eq!(Vec3f::cross(&v1, &v2), Vec3f::new(0.0, 0.0, 1.0));
+        let v1: Vec3f = Vec3f::E1;
+        let v2: Vec3f = Vec3f::E2;
+        assert_eq!(Vec3f::cross(&v1, &v2), Vec3f::E3);
     }
 
     #[test]

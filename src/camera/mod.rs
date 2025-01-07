@@ -2,6 +2,7 @@ use std::cmp::max;
 use std::io::{BufWriter, Write};
 use std::fs::File;
 use std::path::Path;
+use std::sync::Arc;
 
 use log::info;
 use rayon::prelude::*;
@@ -12,6 +13,7 @@ use crate::hittable_list::HittableList;
 use crate::interval::Interval;
 use crate::utilities;
 use crate::vec3::{Axis, Point3f, Vec3f};
+use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::ray::Ray;
 
 pub struct Camera {
@@ -99,7 +101,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &HittableList, output_filepath: &Path) {
+    pub fn render(&self, world: &HittableList, lights: Arc<dyn Hittable>, output_filepath: &Path) {
         let file: File = File::create(output_filepath).unwrap(); 
         let mut writer: BufWriter<File> = BufWriter::new(file);
 
@@ -119,7 +121,7 @@ impl Camera {
                                 (0..self.sqrt_spp).into_par_iter().map(
                                     |s_i: u32| {
                                         let r: Ray = self.get_ray(i, j, s_i, s_j);
-                                        self.ray_color(&r, self.max_depth, world)
+                                        self.ray_color(&r, self.max_depth, world, lights.clone())
                                     }
                                 ).sum::<Color>()
                             }
@@ -162,7 +164,7 @@ impl Camera {
         let px: f64 = ((s_i as f64 + utilities::random()) * self.recip_sqrt_spp) - 0.5;
         let py: f64 = ((s_j as f64 + utilities::random()) * self.recip_sqrt_spp) - 0.5;
 
-        return Vec3f::new(px, py, 0.0);    
+        Vec3f::new(px, py, 0.0)  
     }
 
     fn defocus_disk_sample(&self) -> Point3f {
@@ -171,15 +173,28 @@ impl Camera {
         self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v)
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {        
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList, lights: Arc<dyn Hittable>) -> Color {        
         if depth == 0 {
             return Color::ZERO;
         }
 
         if let Some(rec) = world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
-            let color_from_emission: Color = rec.mat.emitted(rec.uv, &rec.point);
-            if let Some((attenuation, scattered)) = rec.mat.scatter(ray, &rec) { 
-                let color_from_scatter: Color = attenuation * self.ray_color(&scattered, depth-1, world);
+            let color_from_emission: Color = rec.mat.emitted(ray, &rec, rec.uv, &rec.point);
+            if let Some(scatter_rec) = rec.mat.scatter(ray, &rec) {
+                if scatter_rec.skip_pdf {
+                    return scatter_rec.attenuation * self.ray_color(&scatter_rec.skip_pdf_ray, depth-1, world, lights.clone());
+                }
+
+                let light_pdf_ptr: Arc<HittablePDF>  = Arc::new(HittablePDF::new(lights.clone(), &rec.point));
+                let mixed_pdf: MixturePDF = MixturePDF::new(light_pdf_ptr, scatter_rec.pdf_ptr);
+
+                let scattered: Ray = Ray::with_time(&rec.point, &mixed_pdf.generate(), ray.time());
+                let pdf_value: f64 = mixed_pdf.value(scattered.direction());
+
+                let scattering_pdf: f64 = rec.mat.scattering_pdf(ray, &rec, &scattered);
+
+                let sample_color: Color = self.ray_color(&scattered, depth-1, world, lights.clone());
+                let color_from_scatter: Color = (scatter_rec.attenuation * scattering_pdf * sample_color) / pdf_value;
                 return color_from_emission + color_from_scatter;
             }
             return color_from_emission;
