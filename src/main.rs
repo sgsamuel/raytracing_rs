@@ -53,7 +53,7 @@ fn main() {
     let output_filepath: &Path = Path::new("final.ppm");
 
     // World + Camera
-    let (mut scene, cam) = scenes::final_scene(400,   250,  4);
+    let (mut scene, cam) = scenes::final_scene(800, 10000, 40);
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
