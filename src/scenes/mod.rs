@@ -212,7 +212,7 @@ pub fn earth() -> (HittableList, Camera, Arc<dyn Hittable>) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
-    let earth_filepath: &Path = Path::new("earthmap.png");
+    let earth_filepath: &Path = Path::new("images/earthmap.png");
     let earth_texture : Arc<Image> = Arc::new(
         Image::read_image(earth_filepath).unwrap()
     );
@@ -763,7 +763,7 @@ pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> 
         &Color::new(1.0, 1.0, 1.0),
     )));
 
-    let earth_filepath: &Path = Path::new("earthmap.png");
+    let earth_filepath: &Path = Path::new("images/earthmap.png");
     let earth_texture : Arc<Image> = Arc::new(
         Image::read_image(earth_filepath).unwrap()
     );

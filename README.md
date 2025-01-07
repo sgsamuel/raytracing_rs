@@ -7,6 +7,6 @@ Implementation of the Raytracing in a Day/Week/Lifetime series in Rust
 - [Lifetime](https://raytracing.github.io/books/RayTracingTheRestOfYourLife.html)
 
 ## Final Images
-![alt text](final_day.png "Final Image Day")
-![alt text](final_week.png "Final Image Week")
-![alt text](final_life.png "Final Image Lifetime")
+![alt text](images/final_day.png "Final Image Day")
+![alt text](images/final_life.png "Final Image Lifetime")
+![alt text](images/final_week.png "Final Image Week")
