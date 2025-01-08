@@ -38,8 +38,7 @@ pub struct Config {
 impl Config {
     pub fn init() -> Config {
         Config {
-            rust_log: std::env::var("RUST_LOG")
-                .expect("RUST_LOG must be specified"),
+            rust_log: std::env::var("RUST_LOG").expect("RUST_LOG must be specified"),
         }
     }
 }
@@ -55,11 +54,11 @@ fn main() {
     let output_filepath: &Path = Path::new("test.ppm");
 
     // World + Camera
-    let (mut scene, cam, lights) = scenes::cornell_smoke();
+    let (mut scene, lights, cam ) = scenes::cornell_smoke();
     let bvh_scene: Arc<BVHNode> = Arc::new(BVHNode::from_hittable_list(&mut scene));
     let world: HittableList = HittableList::from_object(bvh_scene);
 
-    cam.render(&world, lights, output_filepath);
+    cam.render(&world, &lights, output_filepath);
     
     let elapsed: Duration = now.elapsed();
     info!("Done. Time elapsed {:.2?}", elapsed);

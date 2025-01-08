@@ -101,7 +101,7 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &HittableList, lights: Arc<dyn Hittable>, output_filepath: &Path) {
+    pub fn render(&self, world: &HittableList, lights: &HittableList, output_filepath: &Path) {
         let file: File = File::create(output_filepath).unwrap(); 
         let mut writer: BufWriter<File> = BufWriter::new(file);
 
@@ -121,7 +121,7 @@ impl Camera {
                                 (0..self.sqrt_spp).into_par_iter().map(
                                     |s_i: u32| {
                                         let r: Ray = self.get_ray(i, j, s_i, s_j);
-                                        self.ray_color(&r, self.max_depth, world, lights.clone())
+                                        self.ray_color(&r, self.max_depth, world, lights)
                                     }
                                 ).sum::<Color>()
                             }
@@ -173,7 +173,7 @@ impl Camera {
         self.center + (p.component(Axis::X) * self.defocus_disk_u) + (p.component(Axis::Y) * self.defocus_disk_v)
     }
 
-    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList, lights: Arc<dyn Hittable>) -> Color {        
+    fn ray_color(&self, ray: &Ray, depth: u32, world: &HittableList, lights: &HittableList) -> Color {        
         if depth == 0 {
             return Color::ZERO;
         }
@@ -182,18 +182,25 @@ impl Camera {
             let color_from_emission: Color = rec.mat.emitted(ray, &rec, rec.uv, &rec.point);
             if let Some(scatter_rec) = rec.mat.scatter(ray, &rec) {
                 if scatter_rec.skip_pdf {
-                    return scatter_rec.attenuation * self.ray_color(&scatter_rec.skip_pdf_ray, depth-1, world, lights.clone());
+                    return scatter_rec.attenuation * self.ray_color(&scatter_rec.skip_pdf_ray, depth-1, world, lights);
                 }
 
-                let light_pdf_ptr: Arc<HittablePDF>  = Arc::new(HittablePDF::new(lights.clone(), &rec.point));
-                let mixed_pdf: MixturePDF = MixturePDF::new(light_pdf_ptr, scatter_rec.pdf_ptr);
+                let selected_pdf: Arc<dyn PDF>;
+                if lights.objects.len() > 0 {
+                    let light_pdf_ptr: Arc<HittablePDF>  = Arc::new(HittablePDF::new(Arc::new(lights.clone()), &rec.point));
+                    selected_pdf = Arc::new(MixturePDF::new(light_pdf_ptr, scatter_rec.pdf_ptr));
+                }
+                else {
+                    selected_pdf = scatter_rec.pdf_ptr;
+                }
 
-                let scattered: Ray = Ray::with_time(&rec.point, &mixed_pdf.generate(), ray.time());
-                let pdf_value: f64 = mixed_pdf.value(scattered.direction());
+
+                let scattered: Ray = Ray::with_time(&rec.point, &selected_pdf.generate(), ray.time());
+                let pdf_value: f64 = selected_pdf.value(scattered.direction());
 
                 let scattering_pdf: f64 = rec.mat.scattering_pdf(ray, &rec, &scattered);
 
-                let sample_color: Color = self.ray_color(&scattered, depth-1, world, lights.clone());
+                let sample_color: Color = self.ray_color(&scattered, depth-1, world, lights);
                 let color_from_scatter: Color = (scatter_rec.attenuation * scattering_pdf * sample_color) / pdf_value;
                 return color_from_emission + color_from_scatter;
             }

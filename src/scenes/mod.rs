@@ -5,7 +5,6 @@ use crate::bvh_node::BVHNode;
 use crate::camera::Camera;
 use crate::color::Color;
 use crate::constant_medium::ConstantMedium;
-use crate::hittable::Hittable;
 use crate::hittable_list::HittableList;
 use crate::material::{Dielectric, DiffuseLight, Empty, Lambertian, Material, Metal};
 use crate::perlin::PerlinTexture;
@@ -17,7 +16,7 @@ use crate::utilities;
 use crate::vec3::{Point3f, Vec3f};
 
 #[allow(dead_code)]
-pub fn simple_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn simple_spheres() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -56,11 +55,11 @@ pub fn simple_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn bouncing_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn bouncing_spheres() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -148,11 +147,11 @@ pub fn bouncing_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn checkered_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn checkered_spheres() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -204,11 +203,11 @@ pub fn checkered_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn earth() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn earth() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -252,11 +251,11 @@ pub fn earth() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn perlin_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn perlin_spheres() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -302,11 +301,11 @@ pub fn perlin_spheres() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn quads() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn quads() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -369,11 +368,11 @@ pub fn quads() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn simple_light() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn simple_light() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -436,11 +435,11 @@ pub fn simple_light() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn cornell_box() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn cornell_box() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -567,11 +566,11 @@ pub fn cornell_box() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(lights))
+    (scene, lights, cam)
 }
 
 #[allow(dead_code)]
-pub fn cornell_smoke() -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn cornell_smoke() -> (HittableList, HittableList, Camera) {
     // Scene
     let mut scene: HittableList = HittableList::new();
 
@@ -659,7 +658,6 @@ pub fn cornell_smoke() -> (HittableList, Camera, Arc<dyn Hittable>) {
     ));
     scene.add(Arc::new(ConstantMedium::from_color(rotated_box2, 0.01, &Color::ONE)));
 
-
     // Camera
     let aspect_ratio: f64       = 1.0;
     let image_width: u32        = 600;
@@ -682,11 +680,11 @@ pub fn cornell_smoke() -> (HittableList, Camera, Arc<dyn Hittable>) {
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
 
 #[allow(dead_code)]
-pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (HittableList, Camera, Arc<dyn Hittable>) {
+pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (HittableList, HittableList, Camera) {
     // World
     let mut scene: HittableList = HittableList::new();
 
@@ -825,5 +823,5 @@ pub fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> 
         defocus_angle, focus_dist
     );
 
-    (scene, cam, Arc::new(HittableList::new()))
+    (scene, HittableList::new(), cam)
 }
