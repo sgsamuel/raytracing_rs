@@ -17,7 +17,7 @@ pub mod material;
 pub mod onb;
 pub mod pdf;
 pub mod perlin;
-pub mod quad;
+pub mod plane;
 pub mod ray;
 pub mod scenes;
 pub mod sphere;

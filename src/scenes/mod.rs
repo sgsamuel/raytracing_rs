@@ -8,7 +8,7 @@ use crate::constant_medium::ConstantMedium;
 use crate::hittable_list::HittableList;
 use crate::material::{Dielectric, DiffuseLight, Empty, Lambertian, Material, Metal};
 use crate::perlin::PerlinTexture;
-use crate::quad::Quad;
+use crate::plane::Quad;
 use crate::sphere::Sphere;
 use crate::texture::{Checker, Image, Noise};
 use crate::transform::{Translation, EulerRotation};
